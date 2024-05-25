@@ -83,7 +83,6 @@ class l1smreg extends Bundle{
   val entry_in_l1_pf_region = UInt(1.W);
   val entry_inst_new_va_surpass_l1_pf_va = UInt(1.W);
   val entry_l1_cmp_va_vld = UInt(1.W);
-  val entry_l1_next_state = UInt(3.W);
   val entry_l1_page_sec = UInt(1.W);
   val entry_l1_page_share = UInt(1.W);
   val entry_l1_pf_ppn = UInt(28.W);
@@ -118,7 +117,7 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   val reg = new l1smreg
 
   //chisel 的reg不能直接定义为与output相连，必须将reg和out端口：=相连
-  val entry_l1sm_reinit_req = Output(UInt(1.W))
+
   //l1_pf_va clk
   wire.entry_l1_pf_va_clk_en := wire.entry_l1_pf_addr_init_vld || wire.entry_l1_pf_va_add_gateclk_en
   //l1_pf_ppn clk
@@ -218,62 +217,62 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //state machine
   //绝对NB的地方：verilog的状态机实现非常麻烦，但是chisel就非常的爽，而且易读
   //同时这种时钟域同步控制+异步组合逻辑混写我觉得更加好懂
-    val entry_l1_state = withClockAndReset(io.entry_clk.asBool.asClock, (!io.cpurst_b.asBool).asAsyncReset) {
+  private val entry_l1_state = Wire(UInt(3.W))
+  withClockAndReset(io.entry_clk.asBool.asClock, (!io.cpurst_b.asBool).asAsyncReset) {
     val state = RegInit(reg.entry_l1_state,args.L1_INIT_PF_ADDR.asUInt)
-    state
-  }//其实entry_l1_state的寄存器声明可以合并
+  //其实state的寄存器声明可以合并
 
-  val tmp = Wire (Bool())
-  tmp := io.entry_pop_vld || io.entry_reinit_vld || !io.pfu_dcache_pref_en
-  when(tmp) {
-    entry_l1_state := args.L1_INIT_PF_ADDR.asUInt
+  when(io.entry_pop_vld || io.entry_reinit_vld || !io.pfu_dcache_pref_en) {
+    state := args.L1_INIT_PF_ADDR.asUInt
   }.otherwise{
-    entry_l1_state := args.L1_INIT_PF_ADDR.asUInt  //switch不支持default，可以先赋值，作为一种default
-    switch(entry_l1_state){
+    state := args.L1_INIT_PF_ADDR.asUInt  //switch不支持default，可以先赋值，作为一种default
+    switch(state){
       is(args.L1_INIT_PF_ADDR.asUInt){
 
-        when(wire.entry_l1_pf_addr_init_vld.asBool && io.pfu_dcache_pref_en.asBool){
-          entry_l1_state := args.L1_ADD_PF_VA.asUInt
+        when(wire.entry_l1_pf_addr_init_vld && io.pfu_dcache_pref_en){
+          state := args.L1_ADD_PF_VA.asUInt
         }.otherwise{
-          entry_l1_state := args.L1_INIT_PF_ADDR.asUInt
+          state := args.L1_INIT_PF_ADDR.asUInt
         }
       }
       is(args.L1_ADD_PF_VA.asUInt){
-        entry_l1_state := args.L1_REQ_PF.asUInt
+        state := args.L1_REQ_PF.asUInt
       }
       is(args.L1_REQ_PF.asUInt){
-        when(wire.entry_l1_pf_va_add_vld.asBool && wire.entry_l1_pf_va_cross_4k.asBool && io.cp0_lsu_pfu_mmu_dis.asBool) {
-          entry_l1_state := args.L1_DEAD.asUInt
-        }.elsewhen(wire.entry_l1_pf_va_add_vld.asBool && wire.entry_l1_pf_va_cross_4k.asBool){
-          entry_l1_state := args.L1_REQ_MMU.asUInt
+        when(wire.entry_l1_pf_va_add_vld && wire.entry_l1_pf_va_cross_4k.asBool && io.cp0_lsu_pfu_mmu_dis.asBool) {
+          state := args.L1_DEAD.asUInt
+        }.elsewhen(wire.entry_l1_pf_va_add_vld && wire.entry_l1_pf_va_cross_4k.asBool){
+          state := args.L1_REQ_MMU.asUInt
         }.otherwise{
-          entry_l1_state := args.L1_REQ_PF.asUInt
+          state := args.L1_REQ_PF.asUInt
         }
       }
       is(args.L1_REQ_MMU.asUInt){
         when(io.entry_l1_mmu_pe_req_set.asBool){
-          entry_l1_state := args.L1_WAIT_PPN.asUInt
+          state := args.L1_WAIT_PPN.asUInt
         }.otherwise{
-          entry_l1_state := args.L1_REQ_MMU.asUInt
+          state := args.L1_REQ_MMU.asUInt
         }
       }
       is(args.L1_WAIT_PPN.asUInt) {
-        when(io.pfu_get_ppn_vld.asBool && !io.pfu_get_ppn_err.asBool) {
-          entry_l1_state := args.L1_REQ_PF.asUInt
-        }.elsewhen(io.pfu_get_ppn_vld.asBool && io.pfu_get_ppn_err.asBool) {
-          entry_l1_state := args.L1_DEAD.asUInt
+        when(io.pfu_get_ppn_vld && !io.pfu_get_ppn_err.asBool) {
+          state := args.L1_REQ_PF.asUInt
+        }.elsewhen(io.pfu_get_ppn_vld && io.pfu_get_ppn_err.asBool) {
+          state := args.L1_DEAD.asUInt
         }.otherwise {
-          entry_l1_state := args.L1_WAIT_PPN.asUInt
+          state := args.L1_WAIT_PPN.asUInt
         }
       }
       is(args.L1_DEAD.asUInt) {
         when(io.entry_reinit_vld.asBool) {
-          entry_l1_state := args.L1_INIT_PF_ADDR.asUInt
+          state := args.L1_INIT_PF_ADDR.asUInt
         }.otherwise {
-          entry_l1_state := args.L1_DEAD.asUInt
+          state := args.L1_DEAD.asUInt
         }
       }
     }
+  }
+    entry_l1_state := state
   }
 
   //some compare info
@@ -300,7 +299,7 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //add pf control signal
   wire.entry_l1_pf_va_add_vld   := (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) || wire.entry_l1_biu_pe_req_grnt
   wire.entry_l1_pf_va_add_gateclk_en  :=  (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) ||  io.entry_biu_pe_req_grnt
-  wire.entry_l1_pf_va_add_strideh(PA_WIDTH-1,0)  := io.entry_l1_pf_va(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0)
+  wire.entry_l1_pf_va_add_strideh := wire.entry_l1_pf_va_add_strideh(wire.entry_l1_pf_va_add_strideh.getWidth,PA_WIDTH) ## io.entry_l1_pf_va(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0)
   wire.entry_l1_pf_va_sum_4k  := wire.entry_l1_pf_va_sum_4k(wire.entry_l1_pf_va_sum_4k.getWidth,13) ## Cat("b0".U(1.W),io.entry_l1_pf_va(11,0)) + io.entry_strideh(12,0)
   wire.entry_l1_pf_va_cross_4k      := wire.entry_l1_pf_va_sum_4k(12)
 
@@ -348,8 +347,8 @@ class gated_clk_cell_IO extends Bundle{
 class gated_clk_cell extends RawModule{
   val io = IO(new gated_clk_cell_IO)
 
-  val clk_en_bf_latch = Wire(UInt(1.W))
-  val SE = Wire(UInt(1.W))
+  private val clk_en_bf_latch = Wire(UInt(1.W))
+  private val SE = Wire(UInt(1.W))
 
   clk_en_bf_latch := (io.global_en &&(io.module_en || io.local_en)) || io.external_en
   SE := io.pad_yy_icg_scan_en

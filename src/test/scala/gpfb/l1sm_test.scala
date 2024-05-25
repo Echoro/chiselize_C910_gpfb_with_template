@@ -66,3 +66,17 @@ class SC007GTV extends AnyFreeSpec with ChiselScalatestTester {
     Seq(ChiselGeneratorAnnotation(() => new l1sm(PA_WIDTH)), TargetDirAnnotation("Verilog"))
   )
 }
+
+object FullAdderGen extends App {
+  (new chisel3.stage.ChiselStage).emitVerilog(new l1sm(32))
+}
+
+
+/*
+object Main {
+  def main(args: Array[String]): Unit = {
+    println("Generating the Adder hardware")
+    chisel3.stage.execute(Array("--target-dir", "generated"), () => new l1sm(32))
+    // chisel3.Driver.execute(Array("--help"), null)
+  }
+}*/
