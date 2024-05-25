@@ -96,15 +96,7 @@ class l1smargs extends Bundle {
   val L0_DEAD         = "b111".U
 }
 */
-object args extends ChiselEnum{
 
-  val L1_INIT_PF_ADDR = Value("b000".U(3.W))
-  val L1_ADD_PF_VA    = Value("b001".U(3.W))
-  val L1_REQ_PF       = Value("b100".U(3.W))
-  val L1_REQ_MMU      = Value("b101".U(3.W))
-  val L1_WAIT_PPN     = Value("b110".U(3.W))
-  val L1_DEAD         = Value("b111".U(3.W))
-}
 //个人认为可以优化的点：时钟域可以写的更清楚，reg的时钟域初始化可以用一个函数实现或许更好
 //模块例化和端口连接，用更加方便的手段实现
 //对于reg的时钟域问题，我写了两种利用时钟域实现的方法
@@ -113,6 +105,16 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   val io = IO(new l1smIO)
   val wire = Wire(new l1smwire)
   val reg = new l1smreg
+
+  object args extends ChiselEnum{
+
+    val L1_INIT_PF_ADDR = Value("b000".U(3.W))
+    val L1_ADD_PF_VA    = Value("b001".U(3.W))
+    val L1_REQ_PF       = Value("b100".U(3.W))
+    val L1_REQ_MMU      = Value("b101".U(3.W))
+    val L1_WAIT_PPN     = Value("b110".U(3.W))
+    val L1_DEAD         = Value("b111".U(3.W))
+  }
 
   //chisel 的reg不能直接定义为与output相连，必须将reg和out端口：=相连
 

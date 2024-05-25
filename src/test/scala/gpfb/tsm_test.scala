@@ -12,18 +12,13 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.freespec.AnyFreeSpec
 
 
-/*
+
 class SC007GTV extends AnyFreeSpec with ChiselScalatestTester {
 
   val PA_WIDTH: Int = 32
 
   (new chisel3.stage.ChiselStage).execute(
     Array("-X", "verilog"),
-    Seq(ChiselGeneratorAnnotation(() => new l1sm(PA_WIDTH)), TargetDirAnnotation("Verilog"))
+    Seq(ChiselGeneratorAnnotation(() => new tsm(PA_WIDTH)), TargetDirAnnotation("Verilog"))
   )
-}*/
-
-object FullAdderGen extends App {
-  (new chisel3.stage.ChiselStage).emitVerilog(new l1sm(32))
 }
-

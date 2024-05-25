@@ -1,0 +1,17 @@
+[
+  {
+    "class":"firrtl.EmitCircuitAnnotation",
+    "emitter":"firrtl.VerilogEmitter"
+  },
+  {
+    "class":"firrtl.transforms.BlackBoxTargetDirAnno",
+    "targetDir":"Verilog"
+  },
+  {
+    "class":"firrtl.transforms.CombinationalPath",
+    "sink":"~tsm|tsm>io_entry_dcache_hit_pop_req",
+    "sources":[
+      "~tsm|tsm>io_entry_from_lfb_dcache_hit"
+    ]
+  }
+]
