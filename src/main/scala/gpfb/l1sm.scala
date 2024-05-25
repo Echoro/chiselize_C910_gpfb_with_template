@@ -63,7 +63,6 @@ class l1smwire extends Bundle{
   val entry_l1_biu_pe_req_grnt		 = Bool()
   val entry_l1_mmu_pe_req		 = 	UInt(1.W)
   val entry_l1_mmu_pe_req_grnt		 = 	UInt(1.W)
-  val entry_l1_mmu_pe_req_set		 = 	UInt(1.W)
   val entry_l1_pf_addr_init_vld		 = 	Bool()
   val entry_l1_pf_ppn_clk		 = 	Clock()
   val entry_l1_pf_ppn_clk_en		 = 	Bool()
@@ -75,7 +74,6 @@ class l1smwire extends Bundle{
   val entry_l1_pf_va_clk_en		 = 	Bool()
   val entry_l1_pf_va_cross_4k		 = 	UInt(1.W)
   val entry_l1_pf_va_eq_inst_new_va		 = Bool()
-  val entry_l1_pf_va_sub_inst_new_va		 = 	UInt(40.W)
   val entry_l1_pf_va_sum_4k		 = 	UInt(13.W)
   val entry_l1sm_diff_sub_dist_strideh		 = 	UInt(40.W)
 }
@@ -132,10 +130,10 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
     gated_clk_inst(i).module_en := io.cp0_lsu_icg_en
     gated_clk_inst(i).pad_yy_icg_scan_en := io.pad_yy_icg_scan_en
     if(i == 0){
-      gated_clk_inst(i).clk_out := wire.entry_l1_pf_va_clk
-      gated_clk_inst(i).local_en := wire.entry_l1_pf_va_clk_en
+      wire.entry_l1_pf_va_clk := gated_clk_inst(i).clk_out
+        gated_clk_inst(i).local_en := wire.entry_l1_pf_va_clk_en
     }else{
-      gated_clk_inst(i).clk_out := wire.entry_l1_pf_ppn_clk
+      wire.entry_l1_pf_ppn_clk :=gated_clk_inst(i).clk_out
       gated_clk_inst(i).local_en := wire.entry_l1_pf_ppn_clk_en
     }
   }
@@ -155,9 +153,10 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
     }
 
     io.entry_l1_pf_va := entry_l1_pf_va
+    io.entry_l1_vpn := Fill((io.entry_l1_vpn.getWidth-1)-(PA_WIDTH-12),"b0".U(1.W)) ## entry_l1_pf_va(PA_WIDTH-1,12)
+//注意：原来的verilog是高位悬空的，我这里处理为高位置0
   }
 
-  io.entry_l1_vpn := io.entry_l1_vpn(io.entry_l1_vpn.getWidth,PA_WIDTH-12) ## io.entry_l1_pf_va(PA_WIDTH-1,12)
 
   //l1_pf_ppn
   withClockAndReset(wire.entry_l1_pf_ppn_clk,(!io.cpurst_b.asBool).asAsyncReset){
@@ -166,24 +165,24 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
     val entry_l1_page_share = Reg(reg.entry_l1_page_share)
 
     when(!io.cpurst_b.asBool){
-      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth,PA_WIDTH-12) ## Fill(PA_WIDTH-12,"b0".U(1.W))
+      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth-1,PA_WIDTH-12) ## Fill(PA_WIDTH-12,"b0".U(1.W))
       entry_l1_page_sec              := "b0".U(1.W)
       entry_l1_page_share            := "b0".U(1.W)
     }.elsewhen(wire.entry_l1_pf_addr_init_vld &&  io.pfu_dcache_pref_en){
 
-      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth,PA_WIDTH-12) ## io.ld_da_ppn_ff(PA_WIDTH-13,0)
+      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth-1,PA_WIDTH-12) ## io.ld_da_ppn_ff(PA_WIDTH-13,0)
       entry_l1_page_sec              := io.ld_da_page_sec_ff
       entry_l1_page_share            := io.ld_da_page_share_ff
 
     }.elsewhen(wire.entry_l1_pf_ppn_up_vld){
 
-      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth,PA_WIDTH-12) ## io.pfu_get_ppn(PA_WIDTH-13,0)
+      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth-1,PA_WIDTH-12) ## io.pfu_get_ppn(PA_WIDTH-13,0)
       entry_l1_page_sec              := io.pfu_get_page_sec
       entry_l1_page_share            := io.pfu_get_page_share
     }
 
     //wire
-    io.entry_l1_pf_addr  := io.entry_l1_pf_addr(io.entry_l1_pf_addr.getWidth,PA_WIDTH) ## entry_l1_pf_ppn(PA_WIDTH-13,0) ## io.entry_l1_pf_va(11,0);
+    io.entry_l1_pf_addr  := Fill((io.entry_l1_pf_addr.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## entry_l1_pf_ppn(PA_WIDTH-13,0) ## io.entry_l1_pf_va(11,0);
     //output
     io.entry_l1_page_sec := entry_l1_page_sec
     io.entry_l1_page_share := entry_l1_page_share
@@ -200,6 +199,7 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
     }.otherwise{
       entry_l1_cmp_va_vld := "b0".asUInt.asBool
     }
+    io.entry_l1_cmp_va_vld := entry_l1_cmp_va_vld
   }
 
 
@@ -219,7 +219,7 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //同时这种时钟域同步控制+异步组合逻辑混写我觉得更加好懂
   private val entry_l1_state = Wire(UInt(3.W))
   withClockAndReset(io.entry_clk.asBool.asClock, (!io.cpurst_b.asBool).asAsyncReset) {
-    val state = RegInit(reg.entry_l1_state,args.L1_INIT_PF_ADDR.asUInt)
+    val state = RegInit(reg.entry_l1_state,args.L1_INIT_PF_ADDR)
   //其实state的寄存器声明可以合并
 
   when(io.entry_pop_vld || io.entry_reinit_vld || !io.pfu_dcache_pref_en) {
@@ -227,7 +227,7 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   }.otherwise{
     state := args.L1_INIT_PF_ADDR.asUInt  //switch不支持default，可以先赋值，作为一种default
     switch(state){
-      is(args.L1_INIT_PF_ADDR.asUInt){
+      is(args.L1_INIT_PF_ADDR){
 
         when(wire.entry_l1_pf_addr_init_vld && io.pfu_dcache_pref_en){
           state := args.L1_ADD_PF_VA.asUInt
@@ -235,10 +235,10 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
           state := args.L1_INIT_PF_ADDR.asUInt
         }
       }
-      is(args.L1_ADD_PF_VA.asUInt){
+      is(args.L1_ADD_PF_VA){
         state := args.L1_REQ_PF.asUInt
       }
-      is(args.L1_REQ_PF.asUInt){
+      is(args.L1_REQ_PF){
         when(wire.entry_l1_pf_va_add_vld && wire.entry_l1_pf_va_cross_4k.asBool && io.cp0_lsu_pfu_mmu_dis.asBool) {
           state := args.L1_DEAD.asUInt
         }.elsewhen(wire.entry_l1_pf_va_add_vld && wire.entry_l1_pf_va_cross_4k.asBool){
@@ -247,14 +247,14 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
           state := args.L1_REQ_PF.asUInt
         }
       }
-      is(args.L1_REQ_MMU.asUInt){
+      is(args.L1_REQ_MMU){
         when(io.entry_l1_mmu_pe_req_set.asBool){
           state := args.L1_WAIT_PPN.asUInt
         }.otherwise{
           state := args.L1_REQ_MMU.asUInt
         }
       }
-      is(args.L1_WAIT_PPN.asUInt) {
+      is(args.L1_WAIT_PPN) {
         when(io.pfu_get_ppn_vld && !io.pfu_get_ppn_err.asBool) {
           state := args.L1_REQ_PF.asUInt
         }.elsewhen(io.pfu_get_ppn_vld && io.pfu_get_ppn_err.asBool) {
@@ -263,7 +263,7 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
           state := args.L1_WAIT_PPN.asUInt
         }
       }
-      is(args.L1_DEAD.asUInt) {
+      is(args.L1_DEAD) {
         when(io.entry_reinit_vld.asBool) {
           state := args.L1_INIT_PF_ADDR.asUInt
         }.otherwise {
@@ -299,8 +299,9 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //add pf control signal
   wire.entry_l1_pf_va_add_vld   := (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) || wire.entry_l1_biu_pe_req_grnt
   wire.entry_l1_pf_va_add_gateclk_en  :=  (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) ||  io.entry_biu_pe_req_grnt
-  wire.entry_l1_pf_va_add_strideh := wire.entry_l1_pf_va_add_strideh(wire.entry_l1_pf_va_add_strideh.getWidth,PA_WIDTH) ## io.entry_l1_pf_va(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0)
-  wire.entry_l1_pf_va_sum_4k  := wire.entry_l1_pf_va_sum_4k(wire.entry_l1_pf_va_sum_4k.getWidth,13) ## Cat("b0".U(1.W),io.entry_l1_pf_va(11,0)) + io.entry_strideh(12,0)
+  wire.entry_l1_pf_va_add_strideh := Fill((wire.entry_l1_pf_va_add_strideh.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
+  wire.entry_l1_pf_va_sum_4k  := Cat("b0".U(1.W),io.entry_l1_pf_va(11,0)) + io.entry_strideh(12,0)
+  //原来的verilog对entry_l1_pf_va_sum_4K是[12:0]但是1.chisel不支持位选变化2.声明的时候就是[12:0]，不需要再位选了
   wire.entry_l1_pf_va_cross_4k      := wire.entry_l1_pf_va_sum_4k(12)
 
   //==========================================================
@@ -318,7 +319,7 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //==========================================================
   // &Force("bus","entry_mmu_pe_req_src","1","0"); @253
   wire.entry_l1_mmu_pe_req      := io.entry_mmu_pe_req &&  io.entry_mmu_pe_req_src(0).asBool
-  wire.entry_l1_mmu_pe_req_set  := (entry_l1_state.asUInt === args.L1_REQ_MMU.asUInt)  &&  !wire.entry_l1_mmu_pe_req
+  io.entry_l1_mmu_pe_req_set  := (entry_l1_state.asUInt === args.L1_REQ_MMU.asUInt)  &&  !wire.entry_l1_mmu_pe_req
   wire.entry_l1_mmu_pe_req_grnt := io.entry_mmu_pe_req_grnt &&  io.pfu_mmu_pe_req_sel_l1
   //==========================================================
   //                 State 4 : wait ppn
@@ -328,10 +329,10 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //                 Some compare info
   //==========================================================
   // &Force("output","entry_l1_pf_va_sub_inst_new_va"); @272
-  wire.entry_l1_pf_va_sub_inst_new_va  := wire.entry_l1_pf_va_sub_inst_new_va(wire.entry_l1_pf_va_sub_inst_new_va.getWidth,PA_WIDTH) ## io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0)
-  wire.entry_l1sm_diff_sub_dist_strideh := wire.entry_l1sm_diff_sub_dist_strideh(wire.entry_l1sm_diff_sub_dist_strideh.getWidth,PA_WIDTH) ## io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0)
+  io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
+  wire.entry_l1sm_diff_sub_dist_strideh := Fill((wire.entry_l1sm_diff_sub_dist_strideh.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
   wire.entry_l1_pf_va_eq_inst_new_va := !io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0).orR //注意这里容易错，！对于UInt来说，是检测UInt是否为0，如果为0则返回1
-  wire.entry_inst_new_va_surpass_l1_pf_va_set := (io.entry_stride_neg ^ wire.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1)).asBool && !wire.entry_l1_pf_va_eq_inst_new_va
+  wire.entry_inst_new_va_surpass_l1_pf_va_set := (io.entry_stride_neg ^ io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1)).asBool && !wire.entry_l1_pf_va_eq_inst_new_va
   wire.entry_in_l1_pf_region_set  := io.entry_stride_neg ^ wire.entry_l1sm_diff_sub_dist_strideh(PA_WIDTH-1)
 }
 
