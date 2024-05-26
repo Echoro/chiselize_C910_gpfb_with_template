@@ -1,7 +1,7 @@
-package gpfb
+package gpfbTOP
 
 import chisel3._
-import chisel3.experimental.ChiselEnum
+import chisel3.experimental.{ChiselEnum, Direction}
 import chisel3.util._
 /*parameter L0_INIT_PF_ADDR = 3'b000,
  L0_ADD_PF_VA    = 3'b001,
@@ -9,7 +9,7 @@ import chisel3.util._
  L0_REQ_MMU      = 3'b101,
  L0_WAIT_PPN     = 3'b110,
  L0_DEAD         = 3'b111;*/
-class l1smIO(chose:Int) extends Bundle {
+class l1smIO(private val chose:Int) extends Bundle {
   val cp0_lsu_icg_en = Input(UInt(1.W))
   val cp0_lsu_pfu_mmu_dis = Input(UInt(1.W))
   val cp0_yy_clk_en = Input(Bool())
@@ -54,12 +54,16 @@ class l1smIO(chose:Int) extends Bundle {
   val entry_l1sm_reinit_req = Output(UInt(1.W))
   val entry_l1sm_va_can_cmp = Output(Bool())
 
-  val entry_l1_pf_va = if(chose == 0) Output(UInt(40.W)) else Output(UInt(0.W))
-  val entry_l1_pf_va_t =if(chose == 1) Input(UInt(40.W)) else Input(UInt(0.W))
+  //val entry_l1_pf_va = if(chose == 0) Output(UInt(40.W)) else Output(UInt(0.W))
+  //val entry_l1_pf_va_t =if(chose == 1) Input(UInt(40.W)) else Input(UInt(0.W))
+
+  val entry_l1_pf_va = if(chose == 0) Some(Output(UInt(40.W))) else None
+  val entry_l1_pf_va_t =if(chose == 1) Some(Input(UInt(40.W))) else None
+//override def cloneType = (new l1smIO(chose)).asInstanceOf[this.type]
 
 }
 
-class l1smwire extends Bundle{
+class l1smwire (private val chose:Int) extends Bundle{
   val entry_in_l1_pf_region_set		 = 	UInt(1.W)
   val entry_inst_new_va_surpass_l1_pf_va_set		 = 	UInt(1.W)
   val entry_l1_biu_pe_req		 = 	UInt(1.W)
@@ -79,6 +83,10 @@ class l1smwire extends Bundle{
   val entry_l1_pf_va_eq_inst_new_va		 = Bool()
   val entry_l1_pf_va_sum_4k		 = 	UInt(13.W)
   val entry_l1sm_diff_sub_dist_strideh		 = 	UInt(40.W)
+
+  //val entry_l1_pf_va = if(chose == 1) UInt(40.W) else UInt(0.W)
+  val entry_l1_pf_va =if(chose == 1) Some(UInt(40.W)) else None
+  //override def cloneType = (new l1smwire(chose)).asInstanceOf[this.type]
 }
 class l1smreg extends Bundle{
   val entry_in_l1_pf_region = UInt(1.W);
@@ -110,8 +118,15 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
   override def desiredName: String = s"ct_lsu_pfu_pfb_l${chose+1}sm"
 
   val io = IO(new l1smIO(chose))
-  val wire = Wire(new l1smwire)
+  val wire = Wire(new l1smwire(chose))
   val reg = new l1smreg
+
+//  if(chose == 0){
+//    wire.entry_l1_pf_va <> DontCare
+//    io.entry_l1_pf_va_t <> DontCare
+//  }else{
+//    io.entry_l1_pf_va <> DontCare
+//  }
 
   object args extends ChiselEnum{
     val L1_INIT_PF_ADDR = Value("b000".U(3.W))
@@ -159,7 +174,9 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
       entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth - 1, PA_WIDTH) ## wire.entry_l1_pf_va_add_strideh(PA_WIDTH - 1, 0)
     }
     if (chose == 0) {
-      io.entry_l1_pf_va := entry_l1_pf_va
+      io.entry_l1_pf_va.get := entry_l1_pf_va
+    }else{
+      wire.entry_l1_pf_va.get := entry_l1_pf_va
     }
     io.entry_l1_vpn := Fill((io.entry_l1_vpn.getWidth - 1) - (PA_WIDTH - 12), "b0".U(1.W)) ## entry_l1_pf_va(PA_WIDTH - 1, 12)
 
@@ -190,7 +207,11 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
     }
 
     //wire
-    io.entry_l1_pf_addr  := Fill((io.entry_l1_pf_addr.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## entry_l1_pf_ppn(PA_WIDTH-13,0) ## io.entry_l1_pf_va(11,0);
+    if(chose == 0){
+      io.entry_l1_pf_addr  := Fill((io.entry_l1_pf_addr.getWidth-PA_WIDTH),"b0".U(1.W)) ## entry_l1_pf_ppn(PA_WIDTH-13,0) ## io.entry_l1_pf_va.get(11,0);
+    }else{
+      io.entry_l1_pf_addr  := Fill((io.entry_l1_pf_addr.getWidth-PA_WIDTH),"b0".U(1.W)) ## entry_l1_pf_ppn(PA_WIDTH-13,0) ## wire.entry_l1_pf_va.get(11,0);
+    }
     //output
     io.entry_l1_page_sec := entry_l1_page_sec
     io.entry_l1_page_share := entry_l1_page_share
@@ -313,8 +334,13 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
   //add pf control signal
   wire.entry_l1_pf_va_add_vld   := (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) || wire.entry_l1_biu_pe_req_grnt
   wire.entry_l1_pf_va_add_gateclk_en  :=  (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) ||  io.entry_biu_pe_req_grnt
-  wire.entry_l1_pf_va_add_strideh := Fill((wire.entry_l1_pf_va_add_strideh.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
-  wire.entry_l1_pf_va_sum_4k  := Cat("b0".U(1.W),io.entry_l1_pf_va(11,0)) + io.entry_strideh(12,0)
+  if(chose == 0){
+    wire.entry_l1_pf_va_add_strideh := Fill((wire.entry_l1_pf_va_add_strideh.getWidth-PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va.get(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
+    wire.entry_l1_pf_va_sum_4k  := Cat("b0".U(1.W),io.entry_l1_pf_va.get(11,0)) + io.entry_strideh(12,0)
+  }else{
+    wire.entry_l1_pf_va_add_strideh := Fill((wire.entry_l1_pf_va_add_strideh.getWidth-PA_WIDTH),"b0".U(1.W)) ## (wire.entry_l1_pf_va.get(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
+    wire.entry_l1_pf_va_sum_4k  := Cat("b0".U(1.W),wire.entry_l1_pf_va.get(11,0)) + io.entry_strideh(12,0)
+  }
   //原来的verilog对entry_l1_pf_va_sum_4K是[12:0]但是1.chisel不支持位选变化2.声明的时候就是[12:0]，不需要再位选了
   wire.entry_l1_pf_va_cross_4k      := wire.entry_l1_pf_va_sum_4k(12)
 
@@ -353,12 +379,12 @@ if(chose == 0) {
   //==========================================================
   // &Force("output","entry_l1_pf_va_sub_inst_new_va"); @272
   if(chose == 0){
-    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
+    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va.get(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
   }else {
-    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_l1_pf_va_t(PA_WIDTH-1,0))
+    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-PA_WIDTH),"b0".U(1.W)) ## (wire.entry_l1_pf_va.get(PA_WIDTH-1,0) - io.entry_l1_pf_va_t.get(PA_WIDTH-1,0))
   }
 
-    wire.entry_l1sm_diff_sub_dist_strideh := Fill((wire.entry_l1sm_diff_sub_dist_strideh.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
+    wire.entry_l1sm_diff_sub_dist_strideh := Fill((wire.entry_l1sm_diff_sub_dist_strideh.getWidth-PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
 
 
     wire.entry_l1_pf_va_eq_inst_new_va := !io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0).orR //注意这里容易错，！对于UInt来说，是检测UInt是否为0，如果为0则返回1

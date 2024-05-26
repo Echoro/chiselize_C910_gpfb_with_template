@@ -1,4 +1,4 @@
-package gpfb
+package gpfbTOP
 
 import chisel3.{util, _}
 import chisel3.experimental.ChiselEnum
@@ -10,7 +10,7 @@ class tsmIO extends Bundle{
   val cp0_lsu_icg_en = Input(Bool())
   val cp0_yy_clk_en = Input(Bool())
   val cp0_yy_priv_mode = Input(UInt(2.W))
-  val cpurst_b = Input(UInt(1.W))
+  val cpurst_b = Input(AsyncReset())
   val entry_act_vld = Input(Bool())
   val entry_biu_pe_req_grnt = Input(Bool())
   val entry_clk = Input(Clock())

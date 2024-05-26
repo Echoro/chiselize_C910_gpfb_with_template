@@ -1,4 +1,4 @@
-package gpfb
+package gpfbTOP
 
 
 import chisel3._
@@ -19,11 +19,11 @@ class SC007GTV extends AnyFreeSpec with ChiselScalatestTester {
 
   (new chisel3.stage.ChiselStage).execute(
     Array("-X", "verilog"),
-    Seq(ChiselGeneratorAnnotation(() => new l1sm(PA_WIDTH)), TargetDirAnnotation("Verilog"))
+    Seq(ChiselGeneratorAnnotation(() => new l1sm(PA_WIDTH,1)), TargetDirAnnotation("Verilog"))
   )
 }*/
-
+/*
 object FullAdderGen extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new l1sm(32))
-}
+}*/
 

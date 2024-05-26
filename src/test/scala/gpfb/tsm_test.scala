@@ -12,7 +12,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.freespec.AnyFreeSpec
 
 
-
+/*
 class SC007GTV extends AnyFreeSpec with ChiselScalatestTester {
 
   val PA_WIDTH: Int = 32
@@ -22,3 +22,4 @@ class SC007GTV extends AnyFreeSpec with ChiselScalatestTester {
     Seq(ChiselGeneratorAnnotation(() => new tsm(PA_WIDTH)), TargetDirAnnotation("Verilog"))
   )
 }
+*/
