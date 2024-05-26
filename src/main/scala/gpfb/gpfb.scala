@@ -153,9 +153,11 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
         pfu_gpfb_l1_pf_va_too_far_l2_pf_va := wire.pfu_gpfb_l1_pf_va_too_far_l2_pf_va_set
       }
     }
-    wire.pfu_gpfb_pop_vld := io.pfu_pop_all_vld || io.pfu_gpfb_vld &&  ( wire.pfu_gpfb_dcache_hit_pop_req ||  pfu_gpfb_inst_new_va_too_far_l1_pf_va.asBool ||  pfu_gpfb_l1_pf_va_too_far_l2_pf_va.asBool ||  io.pfu_gsdb_gpfb_pop_req)
+    wire.pfu_gpfb_pop_vld := (io.pfu_pop_all_vld || io.pfu_gpfb_vld &&  ( wire.pfu_gpfb_dcache_hit_pop_req
+      ||  pfu_gpfb_inst_new_va_too_far_l1_pf_va.asBool
+      ||  pfu_gpfb_l1_pf_va_too_far_l2_pf_va.asBool
+      ||  io.pfu_gsdb_gpfb_pop_req))
     wire.pfu_gpfb_strideh := "b0".U((wire.pfu_gpfb_strideh.getWidth-PA_WIDTH).W)  ## Fill(PA_WIDTH-11,wire.pfu_gpfb_stride_neg) ## wire.pfu_gpfb_stride(10,7) ## pfu_gpfb_strideh_6to0(6,0)
-
   }
 
   //                Generate pf_inst_vld signal
@@ -165,7 +167,7 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
   //                Instance state machine
   //l1sm
   //l2sm:注意l2sm还没做
-  val lsm = VecInit(Module(new l1sm(PA_WIDTH)).io,Module(new l2sm(PA_WIDTH)).io)
+  val lsm = VecInit(Module(new l1sm(PA_WIDTH,0)).io,Module(new l1sm(PA_WIDTH,1)).io)
   for(i <-0 to 1){
     lsm(i).cp0_lsu_icg_en := io.cp0_lsu_icg_en 
     lsm(i).cp0_lsu_pfu_mmu_dis := io.cp0_lsu_pfu_mmu_dis 
@@ -175,8 +177,7 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
     lsm(i).entry_biu_pe_req_grnt := io.pfu_gpfb_biu_pe_req_grnt 
     lsm(i).entry_biu_pe_req_src := io.pfu_gpfb_biu_pe_req_src 
     lsm(i).entry_clk := wire.pfu_gpfb_clk 
-    lsm(i).entry_create_dp_vld := wire.pfu_gpfb_create_dp_vld 
-    lsm(i).entry_inst_new_va := wire.pfu_gpfb_inst_new_va
+    lsm(i).entry_create_dp_vld := wire.pfu_gpfb_create_dp_vld
     lsm(i).entry_mmu_pe_req := io.pfu_gpfb_mmu_pe_req 
     lsm(i).entry_mmu_pe_req_grnt := io.pfu_gpfb_mmu_pe_req_grnt 
     lsm(i).entry_mmu_pe_req_src := io.pfu_gpfb_mmu_pe_req_src 
@@ -191,16 +192,21 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
     lsm(i).ld_da_page_share_ff := io.ld_da_page_share_ff 
     lsm(i).ld_da_ppn_ff := io.ld_da_ppn_ff 
     lsm(i).pad_yy_icg_scan_en := io.pad_yy_icg_scan_en 
-    lsm(i).pfu_biu_pe_req_sel_l1 := io.pfu_biu_pe_req_sel_l1 
-    lsm(i).pfu_dcache_pref_en := io.pfu_dcache_pref_en 
+    lsm(i).pfu_biu_pe_req_sel_l1 := io.pfu_biu_pe_req_sel_l1
     lsm(i).pfu_get_page_sec := io.pfu_get_page_sec 
     lsm(i).pfu_get_page_share := io.pfu_get_page_share 
     lsm(i).pfu_get_ppn := io.pfu_get_ppn 
     lsm(i).pfu_get_ppn_err := io.pfu_get_ppn_err 
     lsm(i).pfu_get_ppn_vld := io.pfu_get_ppn_vld
-
     lsm(i).pfu_mmu_pe_req_sel_l1 := io.pfu_mmu_pe_req_sel_l1
+
+    lsm(i).entry_inst_new_va := wire.pfu_gpfb_inst_new_va
+
     if(i == 0){
+      lsm(i).pfu_dcache_pref_en := io.pfu_dcache_pref_en
+
+      wire.pfu_gpfb_l1_pf_va := lsm(i).entry_l1_pf_va
+
       wire.pfu_gpfb_l1sm_reinit_req := lsm(i).entry_l1sm_reinit_req
       wire.pfu_gpfb_l1sm_va_can_cmp := lsm(i).entry_l1sm_va_can_cmp
       lsm(i).entry_l1_dist_strideh := wire.pfu_gpfb_l1_dist_strideh
@@ -210,27 +216,30 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
       io.pfu_gpfb_l1_page_sec := lsm(i).entry_l1_page_sec
       io.pfu_gpfb_l1_page_share := lsm(i).entry_l1_page_share
       io.pfu_gpfb_l1_pf_addr := lsm(i).entry_l1_pf_addr
-      wire.pfu_gpfb_l1_pf_va := lsm(i).entry_l1_pf_va
       wire.pfu_gpfb_l1_pf_va_sub_inst_new_va := lsm(i).entry_l1_pf_va_sub_inst_new_va
       io.pfu_gpfb_l1_vpn := lsm(i).entry_l1_vpn
     }else{
-      lsm(i).entry_l2sm_reinit_req := wire.pfu_gpfb_l2sm_reinit_req
-      lsm(i).entry_l2sm_va_can_cmp := wire.pfu_gpfb_l2sm_va_can_cmp
-      lsm(i).entry_l2_dist_strideh := wire.pfu_gpfb_l2_dist_strideh
-      lsm(i).entry_l2_biu_pe_req_set := wire.pfu_gpfb_l2_biu_pe_req_set
-      lsm(i).entry_l2_cmp_va_vld := wire.pfu_gpfb_l2_cmp_va_vld
-      lsm(i).entry_l2_mmu_pe_req_set := wire.pfu_gpfb_l2_mmu_pe_req_set
-      lsm(i).entry_l2_page_sec := io.pfu_gpfb_l2_page_sec
-      lsm(i).entry_l2_page_share := io.pfu_gpfb_l2_page_share
-      lsm(i).entry_l2_pf_addr := io.pfu_gpfb_l2_pf_addr
-      lsm(i).entry_l2_vpn := io.pfu_gpfb_l2_vpn
+      lsm(i).pfu_dcache_pref_en := io.pfu_l2_pref_en //
 
-      lsm(i).entry_l2_pf_va_sub_l1_pf_va := wire.pfu_gpfb_l2_pf_va_sub_l1_pf_va
-      lsm(i).entry_l1_pf_va := wire.pfu_gpfb_l1_pf_va
-      lsm(i).pfu_l2_pref_en := io.pfu_l2_pref_en
+      lsm(i).entry_l1_pf_va_t := wire.pfu_gpfb_l1_pf_va
+
+      wire.pfu_gpfb_l2sm_reinit_req := lsm(i).entry_l1sm_reinit_req
+      wire.pfu_gpfb_l2sm_va_can_cmp := lsm(i).entry_l1sm_va_can_cmp
+      lsm(i).entry_l1_dist_strideh := wire.pfu_gpfb_l2_dist_strideh
+      wire.pfu_gpfb_l2_biu_pe_req_set := lsm(i).entry_l1_biu_pe_req_set
+      wire.pfu_gpfb_l2_cmp_va_vld := lsm(i).entry_l1_cmp_va_vld
+      wire.pfu_gpfb_l2_mmu_pe_req_set := lsm(i).entry_l1_mmu_pe_req_set
+      io.pfu_gpfb_l2_page_sec := lsm(i).entry_l1_page_sec
+      io.pfu_gpfb_l2_page_share := lsm(i).entry_l1_page_share
+      io.pfu_gpfb_l2_pf_addr := lsm(i).entry_l1_pf_addr
+      wire.pfu_gpfb_l2_pf_va_sub_l1_pf_va := lsm(i).entry_l1_pf_va_sub_inst_new_va
+      io.pfu_gpfb_l2_vpn := lsm(i).entry_l1_vpn
+
     }
   }
-
+  ///注意：l1_pf_va对l1sm为out对l2sm为in，而且对于l2sm而言，l1_pf_va + inst_new_va == l1sm的 inst_new_va
+///l2sm的entry_l2_pf_va == l1sm的entry_pf_va，但是l2sm仅仅作为wire在内部
+  //l2sm继承自l1sm的entry_l1_pf_va看作wire entry_l2_pf_va，将其从端口剔除，同时加上一个新端口entry_l1_pf_va_t，用来和inst_new_va组合为l1sm的inst_new_va
 
   //tsm
   val tsm = Module(new tsm(PA_WIDTH)).io

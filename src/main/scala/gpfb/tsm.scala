@@ -67,6 +67,9 @@ class tsmreg extends Bundle{
 
 
 class tsm (PA_WIDTH : Int)extends RawModule {
+
+  override def desiredName: String = "ct_lsu_pfu_pfb_tsm"
+
   val io = IO(new tsmIO)
   val wire = Wire(new tsmwire)
   val reg = new tsmreg

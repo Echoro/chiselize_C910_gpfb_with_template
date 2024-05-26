@@ -9,7 +9,7 @@ import chisel3.util._
  L0_REQ_MMU      = 3'b101,
  L0_WAIT_PPN     = 3'b110,
  L0_DEAD         = 3'b111;*/
-class l1smIO extends Bundle {
+class l1smIO(chose:Int) extends Bundle {
   val cp0_lsu_icg_en = Input(UInt(1.W))
   val cp0_lsu_pfu_mmu_dis = Input(UInt(1.W))
   val cp0_yy_clk_en = Input(Bool())
@@ -49,11 +49,15 @@ class l1smIO extends Bundle {
   val entry_l1_page_sec = Output(UInt(1.W))
   val entry_l1_page_share = Output(UInt(1.W))
   val entry_l1_pf_addr = Output(UInt(40.W))
-  val entry_l1_pf_va = Output(UInt(40.W))
   val entry_l1_pf_va_sub_inst_new_va = Output(UInt(40.W))
   val entry_l1_vpn = Output(UInt(28.W))
   val entry_l1sm_reinit_req = Output(UInt(1.W))
   val entry_l1sm_va_can_cmp = Output(Bool())
+
+  val entry_l1_pf_va = if(chose == 0) Some(Output(UInt(40.W))) else None
+
+  val entry_l1_pf_v_t =if()Input(UInt(40.W))
+
 }
 
 class l1smwire extends Bundle{
@@ -100,14 +104,17 @@ class l1smargs extends Bundle {
 //个人认为可以优化的点：时钟域可以写的更清楚，reg的时钟域初始化可以用一个函数实现或许更好
 //模块例化和端口连接，用更加方便的手段实现
 //对于reg的时钟域问题，我写了两种利用时钟域实现的方法
-class l1sm (PA_WIDTH:Int) extends RawModule {
 
-  val io = IO(new l1smIO)
+//一个chisel实现l1sm和l2sm两个模块，对于l2sm中功能一样的信号，尝试直接将名字替换为l1的名字，如果没有问题就看作该名字
+class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
+
+  override def desiredName: String = s"ct_lsu_pfu_pfb_l${chose+1}sm"
+
+  val io = IO(new l1smIO(chose))
   val wire = Wire(new l1smwire)
   val reg = new l1smreg
 
   object args extends ChiselEnum{
-
     val L1_INIT_PF_ADDR = Value("b000".U(3.W))
     val L1_ADD_PF_VA    = Value("b001".U(3.W))
     val L1_REQ_PF       = Value("b100".U(3.W))
@@ -117,7 +124,6 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   }
 
   //chisel 的reg不能直接定义为与output相连，必须将reg和out端口：=相连
-
   //l1_pf_va clk
   wire.entry_l1_pf_va_clk_en := wire.entry_l1_pf_addr_init_vld || wire.entry_l1_pf_va_add_gateclk_en
   //l1_pf_ppn clk
@@ -144,21 +150,22 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
 
 
   //l1_pf_va
-  withClockAndReset(wire.entry_l1_pf_va_clk,(!io.cpurst_b.asBool).asAsyncReset){
+  withClockAndReset(wire.entry_l1_pf_va_clk,(!io.cpurst_b.asBool).asAsyncReset) {
     val entry_l1_pf_va = Reg(reg.entry_l1_pf_va)
-    when(!io.cpurst_b.asBool){
-      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth-1,PA_WIDTH) ## Fill(PA_WIDTH,"b0".U(1.W))
-    }.elsewhen(wire.entry_l1_pf_addr_init_vld){
-      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth-1,PA_WIDTH) ## io.entry_inst_new_va(PA_WIDTH-1,0)
-    }.elsewhen (wire.entry_l1_pf_va_add_vld){
-      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth-1,PA_WIDTH) ## wire.entry_l1_pf_va_add_strideh(PA_WIDTH-1,0)
+    when(!io.cpurst_b.asBool) {
+      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth - 1, PA_WIDTH) ## Fill(PA_WIDTH, "b0".U(1.W))
+    }.elsewhen(wire.entry_l1_pf_addr_init_vld) {
+      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth - 1, PA_WIDTH) ## io.entry_inst_new_va(PA_WIDTH - 1, 0)
+    }.elsewhen(wire.entry_l1_pf_va_add_vld) {
+      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth - 1, PA_WIDTH) ## wire.entry_l1_pf_va_add_strideh(PA_WIDTH - 1, 0)
     }
+    if (chose == 0) {
+      io.entry_l1_pf_va := entry_l1_pf_va
+    }
+    io.entry_l1_vpn := Fill((io.entry_l1_vpn.getWidth - 1) - (PA_WIDTH - 12), "b0".U(1.W)) ## entry_l1_pf_va(PA_WIDTH - 1, 12)
 
-    io.entry_l1_pf_va := entry_l1_pf_va
-    io.entry_l1_vpn := Fill((io.entry_l1_vpn.getWidth-1)-(PA_WIDTH-12),"b0".U(1.W)) ## entry_l1_pf_va(PA_WIDTH-1,12)
-//注意：原来的verilog是高位悬空的，我这里处理为高位置0
+    //注意：原来的verilog是高位悬空的，我这里处理为高位置0
   }
-
 
   //l1_pf_ppn
   withClockAndReset(wire.entry_l1_pf_ppn_clk,(!io.cpurst_b.asBool).asAsyncReset){
@@ -296,7 +303,13 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
 
   io.entry_l1sm_va_can_cmp := entry_l1_state.asUInt(2)
   //state0
-  wire.entry_l1_pf_addr_init_vld := (entry_l1_state.asUInt === args.L1_INIT_PF_ADDR.asUInt) && io.entry_tsm_is_judge.asBool
+  if(chose == 0){
+    wire.entry_l1_pf_addr_init_vld := (entry_l1_state.asUInt === args.L1_INIT_PF_ADDR.asUInt) && io.entry_tsm_is_judge.asBool
+  }else{
+    wire.entry_l1_pf_addr_init_vld := (entry_l1_state.asUInt === args.L1_INIT_PF_ADDR.asUInt) && io.entry_tsm_is_judge.asBool && io.pfu_dcache_pref_en
+  }
+
+
   //state1
   //add pf control signal
   wire.entry_l1_pf_va_add_vld   := (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) || wire.entry_l1_biu_pe_req_grnt
@@ -311,18 +324,27 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //==========================================================
   //----------------set biu_pe_req reg------------------------
   // &Force("bus","entry_biu_pe_req_src","1","0"); @237
-  wire.entry_l1_biu_pe_req      := io.entry_biu_pe_req &&  io.entry_biu_pe_req_src(0).asBool
+  wire.entry_l1_biu_pe_req      := io.entry_biu_pe_req &&  io.entry_biu_pe_req_src(chose).asBool
   //一些和reg相关的，合并到时钟域内了
-
-  wire.entry_l1_biu_pe_req_grnt := io.pfu_biu_pe_req_sel_l1 &&  io.entry_biu_pe_req_grnt;
-
+if(chose == 0) {
+  wire.entry_l1_biu_pe_req_grnt := io.pfu_biu_pe_req_sel_l1 &&  io.entry_biu_pe_req_grnt
+}else {
+  wire.entry_l1_biu_pe_req_grnt := (!io.pfu_biu_pe_req_sel_l1 || wire.entry_l1_pf_va_eq_inst_new_va) &&  io.entry_biu_pe_req_grnt
+}
   //==========================================================
   //                 State 3 : req mmu
   //==========================================================
   // &Force("bus","entry_mmu_pe_req_src","1","0"); @253
-  wire.entry_l1_mmu_pe_req      := io.entry_mmu_pe_req &&  io.entry_mmu_pe_req_src(0).asBool
+  wire.entry_l1_mmu_pe_req      := io.entry_mmu_pe_req &&  io.entry_mmu_pe_req_src(chose).asBool
+
   io.entry_l1_mmu_pe_req_set  := (entry_l1_state.asUInt === args.L1_REQ_MMU.asUInt)  &&  !wire.entry_l1_mmu_pe_req
-  wire.entry_l1_mmu_pe_req_grnt := io.entry_mmu_pe_req_grnt &&  io.pfu_mmu_pe_req_sel_l1
+  if(chose == 0){
+    wire.entry_l1_mmu_pe_req_grnt := io.entry_mmu_pe_req_grnt &&  io.pfu_mmu_pe_req_sel_l1
+  }else{
+    wire.entry_l1_mmu_pe_req_grnt := (io.entry_mmu_pe_req && io.entry_mmu_pe_req_grnt &&
+      (!io.pfu_mmu_pe_req_sel_l1 || wire.entry_l1_pf_va_eq_inst_new_va))
+  }
+
   //==========================================================
   //                 State 4 : wait ppn
   //==========================================================
@@ -331,9 +353,15 @@ class l1sm (PA_WIDTH:Int) extends RawModule {
   //                 Some compare info
   //==========================================================
   // &Force("output","entry_l1_pf_va_sub_inst_new_va"); @272
-  io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
-  wire.entry_l1sm_diff_sub_dist_strideh := Fill((wire.entry_l1sm_diff_sub_dist_strideh.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
-  wire.entry_l1_pf_va_eq_inst_new_va := !io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0).orR //注意这里容易错，！对于UInt来说，是检测UInt是否为0，如果为0则返回1
+  if(chose == 0){
+    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
+  }else {
+    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_l1_pf_v_t(PA_WIDTH-1,0))
+  }
+    wire.entry_l1sm_diff_sub_dist_strideh := Fill((wire.entry_l1sm_diff_sub_dist_strideh.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
+
+
+    wire.entry_l1_pf_va_eq_inst_new_va := !io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0).orR //注意这里容易错，！对于UInt来说，是检测UInt是否为0，如果为0则返回1
   wire.entry_inst_new_va_surpass_l1_pf_va_set := (io.entry_stride_neg ^ io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1)).asBool && !wire.entry_l1_pf_va_eq_inst_new_va
   wire.entry_in_l1_pf_region_set  := io.entry_stride_neg ^ wire.entry_l1sm_diff_sub_dist_strideh(PA_WIDTH-1)
 }
