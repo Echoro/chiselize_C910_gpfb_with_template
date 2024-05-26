@@ -54,9 +54,8 @@ class l1smIO(chose:Int) extends Bundle {
   val entry_l1sm_reinit_req = Output(UInt(1.W))
   val entry_l1sm_va_can_cmp = Output(Bool())
 
-  val entry_l1_pf_va = if(chose == 0) Some(Output(UInt(40.W))) else None
-
-  val entry_l1_pf_v_t =if()Input(UInt(40.W))
+  val entry_l1_pf_va = if(chose == 0) Output(UInt(40.W)) else Output(UInt(0.W))
+  val entry_l1_pf_va_t =if(chose == 1) Input(UInt(40.W)) else Input(UInt(0.W))
 
 }
 
@@ -356,8 +355,9 @@ if(chose == 0) {
   if(chose == 0){
     io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
   }else {
-    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_l1_pf_v_t(PA_WIDTH-1,0))
+    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va(PA_WIDTH-1,0) - io.entry_l1_pf_va_t(PA_WIDTH-1,0))
   }
+
     wire.entry_l1sm_diff_sub_dist_strideh := Fill((wire.entry_l1sm_diff_sub_dist_strideh.getWidth-1)-(PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
 
 
