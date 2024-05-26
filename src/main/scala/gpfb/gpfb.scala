@@ -210,10 +210,7 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
 
   //l1sm
   //l2sm
-  //private val lsm = MixedVecInit(Module(new l1sm(PA_WIDTH,0)).io,Module(new l1sm(PA_WIDTH,1)).io)
-
-  private val lsm = MixedVecInit(Seq(Module(new l1sm(PA_WIDTH, 0)).io, Module(new l1sm(PA_WIDTH, 1)).io))
-
+  private val lsm = List(Module(new l1sm(PA_WIDTH,0)).io,Module(new l1sm(PA_WIDTH,1)).io)
   for(i <-0 to 1){
     lsm(i).cp0_lsu_icg_en := io.cp0_lsu_icg_en
     lsm(i).cp0_lsu_pfu_mmu_dis := io.cp0_lsu_pfu_mmu_dis
@@ -283,10 +280,10 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
 
     }
   }
+
   ///注意：l1_pf_va对l1sm为out对l2sm为in，而且对于l2sm而言，l1_pf_va + inst_new_va == l1sm的 inst_new_va
 ///l2sm的entry_l2_pf_va == l1sm的entry_pf_va，但是l2sm仅仅作为wire在内部
   //l2sm继承自l1sm的entry_l1_pf_va看作wire entry_l2_pf_va，将其从端口剔除，同时加上一个新端口entry_l1_pf_va_t，用来和inst_new_va组合为l1sm的inst_new_va
-
 
 
   //                Generate some compare info

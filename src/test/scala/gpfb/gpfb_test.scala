@@ -22,6 +22,6 @@ class SC007GTV extends AnyFreeSpec with ChiselScalatestTester {
     Seq(ChiselGeneratorAnnotation(() => new gpfb(PA_WIDTH)), TargetDirAnnotation("Verilog"))
   )
 }
-object FullAdderGen extends App {
+/*object FullAdderGen extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new gpfb(32))
-}
+}*/
