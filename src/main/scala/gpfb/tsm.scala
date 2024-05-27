@@ -189,10 +189,10 @@ class tsm (PA_WIDTH : Int)extends RawModule {
     io.entry_mmu_pe_req_src := entry_mmu_pe_req_src
   }
 
-  wire.entry_stride_ext :=  "b0".U((wire.entry_stride_ext.getWidth-PA_WIDTH).W) ## Fill(PA_WIDTH-11,io.entry_stride_neg) ## io.entry_stride(10,0)
+  wire.entry_stride_ext :=  ("b0".U((wire.entry_stride_ext.getWidth-PA_WIDTH).W) ## Fill(PA_WIDTH-11,io.entry_stride_neg)) ## io.entry_stride(10,0)
 
 
-  wire.entry_pipe_va_add_stride  := "b0".U((wire.entry_pipe_va_add_stride.getWidth-PA_WIDTH).W) ## io.pipe_va(PA_WIDTH-1,0) + wire.entry_stride_ext(PA_WIDTH-1,0)
+  wire.entry_pipe_va_add_stride  := ("b0".U((wire.entry_pipe_va_add_stride.getWidth-PA_WIDTH).W) ## io.pipe_va(PA_WIDTH-1,0)) + wire.entry_stride_ext(PA_WIDTH-1,0)
   //judge whether pipe_va + stride cross 4k
   wire.entry_sum_4k :=  io.pipe_va(11,0) + wire.entry_stride_ext(12,0)
 
