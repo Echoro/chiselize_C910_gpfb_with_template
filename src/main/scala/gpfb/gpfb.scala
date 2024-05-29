@@ -1,110 +1,25 @@
 package gpfbTOP
+import IOinst._
 
 import chisel3._
+import chisel3.experimental.noPrefix
 import chisel3.util._
+import chisel3.util.experimental._
 
-class gpfbIO extends Bundle{
-  val cp0_lsu_icg_en = Input(Bool())
-  val cp0_lsu_pfu_mmu_dis = Input(Bool())
-  val cp0_yy_clk_en = Input(Bool())
-  val cp0_yy_priv_mode = Input(UInt(2.W))
-  val cpurst_b = Input(AsyncReset())
-  val forever_cpuclk = Input(Clock())
-  val ld_da_page_sec_ff = Input(Bool())
-  val ld_da_page_share_ff = Input(Bool())
-  val ld_da_pfu_act_vld = Input(Bool())
-  val ld_da_pfu_pf_inst_vld = Input(Bool())
-  val ld_da_pfu_va = Input(UInt(40.W))
-  val ld_da_ppn_ff = Input(UInt(28.W))
-  val lsu_pfu_l1_dist_sel = Input(UInt(4.W))
-  val lsu_pfu_l2_dist_sel = Input(UInt(4.W))
-  val pad_yy_icg_scan_en = Input(Bool())
-  val pfu_biu_pe_req_sel_l1 = Input(Bool())
-  val pfu_dcache_pref_en = Input(Bool())
-  val pfu_get_page_sec = Input(Bool())
-  val pfu_get_page_share = Input(Bool())
-  val pfu_get_ppn = Input(UInt(28.W))
-  val pfu_get_ppn_err = Input(Bool())
-  val pfu_get_ppn_vld = Input(Bool())
-  val pfu_gpfb_biu_pe_req_grnt = Input(Bool())
-  val pfu_gpfb_from_lfb_dcache_hit = Input(Bool())
-  val pfu_gpfb_from_lfb_dcache_miss = Input(Bool())
-  val pfu_gpfb_mmu_pe_req_grnt = Input(Bool())
-  val pfu_gsdb_gpfb_create_vld = Input(Bool())
-  val pfu_gsdb_gpfb_pop_req = Input(Bool())
-  val pfu_gsdb_stride = Input(UInt(11.W))
-  val pfu_gsdb_stride_neg = Input(Bool())
-  val pfu_gsdb_strideh_6to0 = Input(UInt(7.W))
-  val pfu_l2_pref_en = Input(Bool())
-  val pfu_mmu_pe_req_sel_l1 = Input(Bool())
-  val pfu_pop_all_vld = Input(Bool())
-  val pfu_gpfb_biu_pe_req = Output(Bool())
-  val pfu_gpfb_biu_pe_req_src = Output(UInt(2.W))
-  val pfu_gpfb_l1_page_sec = Output(Bool())
-  val pfu_gpfb_l1_page_share = Output(Bool())
-  val pfu_gpfb_l1_pf_addr = Output(UInt(40.W))
-  val pfu_gpfb_l1_vpn = Output(UInt(28.W))
-  val pfu_gpfb_l2_page_sec = Output(Bool())
-  val pfu_gpfb_l2_page_share = Output(Bool())
-  val pfu_gpfb_l2_pf_addr = Output(UInt(40.W))
-  val pfu_gpfb_l2_vpn = Output(UInt(28.W))
-  val pfu_gpfb_mmu_pe_req = Output(Bool())
-  val pfu_gpfb_mmu_pe_req_src = Output(UInt(2.W))
-  val pfu_gpfb_priv_mode = Output(UInt(2.W))
-  val pfu_gpfb_vld = Output(Bool())
+class tsm extends BlackBox {
+  override def desiredName: String = "ct_lsu_pfu_pfb_tsm"
+  val io =  IO(new tsmIO)
+}
 
-
-}
-class gpfbwire extends Bundle{
-  val pfb_gpfb_128strideh = UInt(40.W)
-  val pfb_gpfb_32strideh = UInt(40.W)
-  val pfu_gpfb_act_vld = Bool()
-  val pfu_gpfb_clk = Clock()
-  val pfu_gpfb_clk_en = Bool()
-  val pfu_gpfb_create_clk = Clock()
-  val pfu_gpfb_create_clk_en = Bool()
-  val pfu_gpfb_create_dp_vld = Bool()
-  val pfu_gpfb_create_gateclk_en = Bool()
-  val pfu_gpfb_create_vld = Bool()
-  val pfu_gpfb_dcache_hit_pop_req = Bool()
-  val pfu_gpfb_inst_new_va = UInt(40.W)
-  val pfu_gpfb_inst_new_va_too_far_l1_pf_va_set = Bool()
-  val pfu_gpfb_l1_biu_pe_req_set = Bool()
-  val pfu_gpfb_l1_cmp_va_vld = Bool()
-  val pfu_gpfb_l1_dist_strideh = UInt(40.W)
-  val pfu_gpfb_l1_mmu_pe_req_set = Bool()
-  val pfu_gpfb_l1_pf_va = UInt(40.W)
-  val pfu_gpfb_l1_pf_va_sub_inst_new_va = UInt(40.W)
-  val pfu_gpfb_l1_pf_va_too_far_l2_pf_va_set = Bool()
-  val pfu_gpfb_l1sm_diff_sub_32strideh = UInt(40.W)
-  val pfu_gpfb_l1sm_reinit_req = Bool()
-  val pfu_gpfb_l1sm_va_can_cmp = Bool()
-  val pfu_gpfb_l2_biu_pe_req_set = Bool()
-  val pfu_gpfb_l2_cmp_va_vld = Bool()
-  val pfu_gpfb_l2_dist_strideh = UInt(40.W)
-  val pfu_gpfb_l2_mmu_pe_req_set = Bool()
-  val pfu_gpfb_l2_pf_va_sub_l1_pf_va = UInt(40.W)
-  val pfu_gpfb_l2sm_diff_sub_128strideh = UInt(40.W)
-  val pfu_gpfb_l2sm_reinit_req = Bool()
-  val pfu_gpfb_l2sm_va_can_cmp = Bool()
-  val pfu_gpfb_pf_inst_vld = Bool()
-  val pfu_gpfb_pop_vld = Bool()
-  val pfu_gpfb_reinit_vld = Bool()
-  val pfu_gpfb_stride = UInt(11.W)
-  val pfu_gpfb_stride_neg = Bool()
-  val pfu_gpfb_strideh = UInt(40.W)
-  val pfu_gpfb_tsm_is_judge = Bool()
-}
-class gpfbreg extends Bundle{
-  val pfu_gpfb_inst_new_va_too_far_l1_pf_va = UInt(1.W)
-  val pfu_gpfb_l1_pf_va_too_far_l2_pf_va = UInt(1.W)
-  val pfu_gpfb_strideh_6to0 = UInt(7.W)
-}
 
 class gpfb (PA_WIDTH:Int)extends RawModule{
+
   val io = IO(new gpfbIO)
+
   val wire = Wire(new gpfbwire)
   val reg = new gpfbreg
+
+  override def desiredName: String = s"ct_lsu_pfu_gpfb_t1"
 
   wire.pfu_gpfb_clk_en  := io.pfu_gpfb_vld || wire.pfu_gpfb_create_gateclk_en
   wire.pfu_gpfb_create_clk_en := wire.pfu_gpfb_create_gateclk_en

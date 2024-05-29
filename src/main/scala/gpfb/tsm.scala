@@ -1,76 +1,18 @@
 package gpfbTOP
+import IOinst._
 
 import chisel3.{util, _}
-import chisel3.experimental.ChiselEnum
+import chisel3.experimental.{ChiselEnum, noPrefix}
 import chisel3.util.{Fill, is, switch}
 import os.FileType.File
 
-
-class tsmIO extends Bundle{
-  val cp0_lsu_icg_en = Input(Bool())
-  val cp0_yy_clk_en = Input(Bool())
-  val cp0_yy_priv_mode = Input(UInt(2.W))
-  val cpurst_b = Input(AsyncReset())
-  val entry_act_vld = Input(Bool())
-  val entry_biu_pe_req_grnt = Input(Bool())
-  val entry_clk = Input(Clock())
-  val entry_create_dp_vld = Input(Bool())
-  val entry_create_vld = Input(Bool())
-  val entry_from_lfb_dcache_hit = Input(Bool())
-  val entry_from_lfb_dcache_miss = Input(Bool())
-  val entry_l1_biu_pe_req_set = Input(UInt(1.W))
-  val entry_l1_mmu_pe_req_set = Input(UInt(1.W))
-  val entry_l2_biu_pe_req_set = Input(UInt(1.W))
-  val entry_l2_mmu_pe_req_set = Input(UInt(1.W))
-  val entry_mmu_pe_req_grnt = Input(Bool())
-  val entry_pf_inst_vld = Input(Bool())
-  val entry_pop_vld = Input(Bool())
-  val entry_reinit_vld = Input(Bool())
-  val entry_stride = Input(UInt(11.W))
-  val entry_stride_neg = Input(UInt(1.W))
-  val forever_cpuclk = Input(Clock())
-  val pad_yy_icg_scan_en = Input(Bool())
-  val pipe_va = Input(UInt(40.W))
-  val entry_biu_pe_req = Output(Bool())
-  val entry_biu_pe_req_src = Output(UInt(2.W))
-  val entry_dcache_hit_pop_req = Output(Bool())
-  val entry_inst_new_va = Output(UInt(40.W))
-  val entry_mmu_pe_req = Output(Bool())
-  val entry_mmu_pe_req_src = Output(UInt(2.W))
-  val entry_priv_mode = Output(UInt(2.W))
-  val entry_tsm_is_judge = Output(Bool())
-  val entry_vld = Output(Bool())
-}
-class tsmwire extends Bundle{
-  val entry_biu_pe_req_set = UInt(1.W)
-  val entry_biu_pe_req_set_src = UInt(2.W)
-  val entry_inst_new_va_cross_4k = Bool()
-  val entry_mmu_pe_req_set = UInt(1.W)
-  val entry_mmu_pe_req_set_src = UInt(2.W)
-  val entry_pf_inst_vld_clk = Clock()
-  val entry_pf_inst_vld_clk_en = Bool()
-  val entry_pipe_va_add_stride = UInt(40.W)
-  val entry_stride_ext = UInt(40.W)
-  val entry_sum_4k = UInt(13.W)
-}
-class tsmreg extends Bundle{
-  val entry_already_dcache_hit = UInt(1.W)
-  val entry_biu_pe_req = UInt(1.W)
-  val entry_biu_pe_req_src = UInt(2.W)
-  val entry_inst_new_va = UInt(40.W)
-  val entry_mmu_pe_req = UInt(1.W)
-  val entry_mmu_pe_req_src = UInt(2.W)
-  val entry_priv_mode = UInt(2.W)
-
-  val entry_top_state = UInt(2.W)
-}
 
 
 class tsm (PA_WIDTH : Int)extends RawModule {
 
   override def desiredName: String = "ct_lsu_pfu_pfb_tsm"
 
-  val io = IO(new tsmIO)
+  val io = noPrefix{IO(new tsmIO)}
   val wire = Wire(new tsmwire)
   val reg = new tsmreg
 

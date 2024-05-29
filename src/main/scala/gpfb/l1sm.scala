@@ -1,7 +1,8 @@
 package gpfbTOP
 
+import IOinst._
 import chisel3._
-import chisel3.experimental.{ChiselEnum, Direction}
+import chisel3.experimental.{ChiselEnum, Direction, noPrefix}
 import chisel3.util._
 /*parameter L0_INIT_PF_ADDR = 3'b000,
  L0_ADD_PF_VA    = 3'b001,
@@ -9,95 +10,7 @@ import chisel3.util._
  L0_REQ_MMU      = 3'b101,
  L0_WAIT_PPN     = 3'b110,
  L0_DEAD         = 3'b111;*/
-class l1smIO(private val chose:Int) extends Bundle {
-  val cp0_lsu_icg_en = Input(UInt(1.W))
-  val cp0_lsu_pfu_mmu_dis = Input(UInt(1.W))
-  val cp0_yy_clk_en = Input(Bool())
-  val cpurst_b = Input(AsyncReset())
-  val entry_biu_pe_req = Input(Bool())
-  val entry_biu_pe_req_grnt = Input(Bool())
-  val entry_biu_pe_req_src = Input(UInt(2.W))
-  val entry_clk = Input(Clock())
-  val entry_create_dp_vld = Input(UInt(1.W))
-  val entry_inst_new_va = Input(UInt(40.W))
-  val entry_l1_dist_strideh = Input(UInt(40.W))
-  val entry_mmu_pe_req = Input(Bool())
-  val entry_mmu_pe_req_grnt = Input(Bool())
-  val entry_mmu_pe_req_src = Input(UInt(2.W))
-  val entry_pf_inst_vld = Input(Bool())
-  val entry_pop_vld = Input(Bool())
-  val entry_reinit_vld = Input(Bool())
-  val entry_stride_neg = Input(UInt(1.W))
-  val entry_strideh = Input(UInt(40.W))
-  val entry_tsm_is_judge = Input(UInt(1.W))
-  val forever_cpuclk = Input(Clock())
-  val ld_da_page_sec_ff = Input(UInt(1.W))
-  val ld_da_page_share_ff = Input(UInt(1.W))
-  val ld_da_ppn_ff = Input(UInt(28.W))
-  val pad_yy_icg_scan_en = Input(UInt(1.W))
-  val pfu_biu_pe_req_sel_l1 = Input(Bool())
-  val pfu_dcache_pref_en = Input(Bool())
-  val pfu_get_page_sec = Input(UInt(1.W))
-  val pfu_get_page_share = Input(UInt(1.W))
-  val pfu_get_ppn = Input(UInt(28.W))
-  val pfu_get_ppn_err = Input(UInt(1.W))
-  val pfu_get_ppn_vld = Input(Bool())
-  val pfu_mmu_pe_req_sel_l1 = Input(Bool())
-  val entry_l1_biu_pe_req_set = Output(UInt(1.W))
-  val entry_l1_cmp_va_vld = Output(Bool())
-  val entry_l1_mmu_pe_req_set = Output(UInt(1.W))
-  val entry_l1_page_sec = Output(UInt(1.W))
-  val entry_l1_page_share = Output(UInt(1.W))
-  val entry_l1_pf_addr = Output(UInt(40.W))
-  val entry_l1_pf_va_sub_inst_new_va = Output(UInt(40.W))
-  val entry_l1_vpn = Output(UInt(28.W))
-  val entry_l1sm_reinit_req = Output(UInt(1.W))
-  val entry_l1sm_va_can_cmp = Output(Bool())
 
-  //val entry_l1_pf_va = if(chose == 0) Output(UInt(40.W)) else Output(UInt(0.W))
-  //val entry_l1_pf_va_t =if(chose == 1) Input(UInt(40.W)) else Input(UInt(0.W))
-
-  val entry_l1_pf_va = if(chose == 0) Some(Output(UInt(40.W))) else None
-  val entry_l1_pf_va_t =if(chose == 1) Some(Input(UInt(40.W))) else None
-//override def cloneType = (new l1smIO(chose)).asInstanceOf[this.type]
-
-}
-
-class l1smwire (private val chose:Int) extends Bundle{
-  val entry_in_l1_pf_region_set		 = 	UInt(1.W)
-  val entry_inst_new_va_surpass_l1_pf_va_set		 = 	UInt(1.W)
-  val entry_l1_biu_pe_req		 = 	UInt(1.W)
-  val entry_l1_biu_pe_req_grnt		 = Bool()
-  val entry_l1_mmu_pe_req		 = 	UInt(1.W)
-  val entry_l1_mmu_pe_req_grnt		 = 	UInt(1.W)
-  val entry_l1_pf_addr_init_vld		 = 	Bool()
-  val entry_l1_pf_ppn_clk		 = 	Clock()
-  val entry_l1_pf_ppn_clk_en		 = 	Bool()
-  val entry_l1_pf_ppn_up_vld		 = 	Bool()
-  val entry_l1_pf_va_add_gateclk_en		 = 	Bool()
-  val entry_l1_pf_va_add_strideh		 = 	UInt(40.W)
-  val entry_l1_pf_va_add_vld		 = Bool()
-  val entry_l1_pf_va_clk		 = 	Clock()
-  val entry_l1_pf_va_clk_en		 = 	Bool()
-  val entry_l1_pf_va_cross_4k		 = 	UInt(1.W)
-  val entry_l1_pf_va_eq_inst_new_va		 = Bool()
-  val entry_l1_pf_va_sum_4k		 = 	UInt(13.W)
-  val entry_l1sm_diff_sub_dist_strideh		 = 	UInt(40.W)
-
-  //val entry_l1_pf_va = if(chose == 1) UInt(40.W) else UInt(0.W)
-  val entry_l1_pf_va =if(chose == 1) Some(UInt(40.W)) else None
-  //override def cloneType = (new l1smwire(chose)).asInstanceOf[this.type]
-}
-class l1smreg extends Bundle{
-  val entry_in_l1_pf_region = UInt(1.W);
-  val entry_inst_new_va_surpass_l1_pf_va = UInt(1.W);
-  val entry_l1_cmp_va_vld = UInt(1.W);
-  val entry_l1_page_sec = UInt(1.W);
-  val entry_l1_page_share = UInt(1.W);
-  val entry_l1_pf_ppn = UInt(28.W);
-  val entry_l1_pf_va = UInt(40.W);
-  val entry_l1_state = UInt(3.W);
-}
 /*
 class l1smargs extends Bundle {
   val L0_INIT_PF_ADDR = "b001".U
@@ -117,7 +30,7 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
 
   override def desiredName: String = s"ct_lsu_pfu_pfb_l${chose+1}sm"
 
-  val io = IO(new l1smIO(chose))
+  val io = noPrefix{IO(new l1smIO(chose))}
   val wire = Wire(new l1smwire(chose))
   val reg = new l1smreg
 
@@ -401,13 +314,13 @@ class gated_clk_cell_IO extends Bundle{
   val pad_yy_icg_scan_en = Input(Bool())
   val clk_out = Output(Clock())
 }
-class gated_clk_cell extends RawModule{
+class gated_clk_cell extends BlackBox {
   val io = IO(new gated_clk_cell_IO)
-
-  private val clk_en_bf_latch = Wire(UInt(1.W))
-  private val SE = Wire(UInt(1.W))
-
-  clk_en_bf_latch := (io.global_en &&(io.module_en || io.local_en)) || io.external_en
-  SE := io.pad_yy_icg_scan_en
-  io.clk_out := io.clk_in
+//  override def desiredName: String = s"gated_clk_cell_tmp"
+//  private val clk_en_bf_latch = Wire(UInt(1.W))
+//  private val SE = Wire(UInt(1.W))
+//
+//  clk_en_bf_latch := (io.global_en &&(io.module_en || io.local_en)) || io.external_en
+//  SE := io.pad_yy_icg_scan_en
+//  io.clk_out := io.clk_in
 }
