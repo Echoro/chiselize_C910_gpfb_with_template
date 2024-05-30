@@ -28,7 +28,7 @@ class l1smargs extends Bundle {
 //一个chisel实现l1sm和l2sm两个模块，对于l2sm中功能一样的信号，尝试直接将名字替换为l1的名字，如果没有问题就看作该名字
 class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
 
-  override def desiredName: String = s"ct_lsu_pfu_pfb_l${chose+1}sm"
+  override def desiredName: String = s"ct_lsu_pfu_pfb_l${chose+1}sm_tmp"
 
   val io = noPrefix{IO(new l1smIO(chose))}
   val wire = Wire(new l1smwire(chose))

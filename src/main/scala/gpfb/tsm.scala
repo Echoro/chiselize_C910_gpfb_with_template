@@ -10,7 +10,7 @@ import os.FileType.File
 
 class tsm (PA_WIDTH : Int)extends RawModule {
 
-  override def desiredName: String = "ct_lsu_pfu_pfb_tsm"
+  override def desiredName: String = "ct_lsu_pfu_pfb_tsm_tmp"
 
   val io = noPrefix{IO(new tsmIO)}
   val wire = Wire(new tsmwire)

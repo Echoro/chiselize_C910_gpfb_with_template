@@ -849,7 +849,7 @@ end // initial
 `endif
 `endif // SYNTHESIS
 endmodule
-module ct_lsu_pfu_gpfb(
+module ct_lsu_pfu_gpfb_tmp(
   input         io_cp0_lsu_icg_en,
   input         io_cp0_lsu_pfu_mmu_dis,
   input         io_cp0_yy_clk_en,

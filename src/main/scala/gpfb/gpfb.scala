@@ -6,10 +6,11 @@ import chisel3.experimental.noPrefix
 import chisel3.util._
 import chisel3.util.experimental._
 
+/*
 class tsm extends BlackBox {
   override def desiredName: String = "ct_lsu_pfu_pfb_tsm"
   val io =  IO(new tsmIO)
-}
+}*/
 
 
 class gpfb (PA_WIDTH:Int)extends RawModule{
@@ -19,7 +20,7 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
   val wire = Wire(new gpfbwire)
   val reg = new gpfbreg
 
-  override def desiredName: String = s"ct_lsu_pfu_gpfb_t1"
+  override def desiredName: String = s"ct_lsu_pfu_gpfb_tmp"
 
   wire.pfu_gpfb_clk_en  := io.pfu_gpfb_vld || wire.pfu_gpfb_create_gateclk_en
   wire.pfu_gpfb_create_clk_en := wire.pfu_gpfb_create_gateclk_en

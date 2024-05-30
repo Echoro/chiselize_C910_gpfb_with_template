@@ -14,31 +14,31 @@
   {
     "class":"firrtl.transforms.DedupedResult",
     "original":"~ct_lsu_pfu_gpfb|gated_clk_cell_2",
-    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_tsm:ct_lsu_pfu_pfb_tsm/gated_clk_cell:gated_clk_cell",
+    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_tsm_tmp:ct_lsu_pfu_pfb_tsm_tmp/gated_clk_cell:gated_clk_cell",
     "index":0.2
   },
   {
     "class":"firrtl.transforms.DedupedResult",
     "original":"~ct_lsu_pfu_gpfb|gated_clk_cell_3",
-    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l1sm:ct_lsu_pfu_pfb_l1sm/gated_clk_cell:gated_clk_cell",
+    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l1sm_tmp:ct_lsu_pfu_pfb_l1sm_tmp/gated_clk_cell:gated_clk_cell",
     "index":0.4
   },
   {
     "class":"firrtl.transforms.DedupedResult",
     "original":"~ct_lsu_pfu_gpfb|gated_clk_cell_4",
-    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l1sm:ct_lsu_pfu_pfb_l1sm/gated_clk_cell_1:gated_clk_cell",
+    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l1sm_tmp:ct_lsu_pfu_pfb_l1sm_tmp/gated_clk_cell_1:gated_clk_cell",
     "index":0.5
   },
   {
     "class":"firrtl.transforms.DedupedResult",
     "original":"~ct_lsu_pfu_gpfb|gated_clk_cell_5",
-    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l2sm:ct_lsu_pfu_pfb_l2sm/gated_clk_cell:gated_clk_cell",
+    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l2sm_tmp:ct_lsu_pfu_pfb_l2sm_tmp/gated_clk_cell:gated_clk_cell",
     "index":0.7
   },
   {
     "class":"firrtl.transforms.DedupedResult",
     "original":"~ct_lsu_pfu_gpfb|gated_clk_cell_6",
-    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l2sm:ct_lsu_pfu_pfb_l2sm/gated_clk_cell_1:gated_clk_cell",
+    "duplicate":"~ct_lsu_pfu_gpfb|ct_lsu_pfu_gpfb/ct_lsu_pfu_pfb_l2sm_tmp:ct_lsu_pfu_pfb_l2sm_tmp/gated_clk_cell_1:gated_clk_cell",
     "index":0.8
   },
   {
