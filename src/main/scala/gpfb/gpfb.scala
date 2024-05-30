@@ -16,11 +16,10 @@ class tsm extends BlackBox {
 class gpfb (PA_WIDTH:Int)extends RawModule{
 
   val io = IO(new gpfbIO)
-
   val wire = Wire(new gpfbwire)
   val reg = new gpfbreg
 
-  override def desiredName: String = s"ct_lsu_pfu_gpfb_tmp"
+  override def desiredName: String = s"ct_lsu_pfu_gpfb_t"
 
   wire.pfu_gpfb_clk_en  := io.pfu_gpfb_vld || wire.pfu_gpfb_create_gateclk_en
   wire.pfu_gpfb_create_clk_en := wire.pfu_gpfb_create_gateclk_en

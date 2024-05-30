@@ -254,3 +254,13 @@ class l1smreg extends Bundle{
   val entry_l1_pf_va = UInt(40.W);
   val entry_l1_state = UInt(3.W);
 }
+
+class gated_clk_cell_IO extends Bundle{
+  val clk_in = Input(Clock())
+  val global_en = Input(Bool())
+  val module_en = Input(Bool())
+  val local_en = Input(Bool())
+  val external_en = Input(Bool())
+  val pad_yy_icg_scan_en = Input(Bool())
+  val clk_out = Output(Clock())
+}

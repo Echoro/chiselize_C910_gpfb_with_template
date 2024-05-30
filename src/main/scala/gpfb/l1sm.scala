@@ -4,23 +4,6 @@ import IOinst._
 import chisel3._
 import chisel3.experimental.{ChiselEnum, Direction, noPrefix}
 import chisel3.util._
-/*parameter L0_INIT_PF_ADDR = 3'b000,
- L0_ADD_PF_VA    = 3'b001,
- L0_REQ_PF       = 3'b100,
- L0_REQ_MMU      = 3'b101,
- L0_WAIT_PPN     = 3'b110,
- L0_DEAD         = 3'b111;*/
-
-/*
-class l1smargs extends Bundle {
-  val L0_INIT_PF_ADDR = "b001".U
-  val L0_REQ_PF       = "b100".U
-  val L0_REQ_MMU      = "b101".U
-  val L0_WAIT_PPN     = "b110".U
-  val L0_DEAD         = "b111".U
-}
-*/
-
 //个人认为可以优化的点：时钟域可以写的更清楚，reg的时钟域初始化可以用一个函数实现或许更好
 //模块例化和端口连接，用更加方便的手段实现
 //对于reg的时钟域问题，我写了两种利用时钟域实现的方法
@@ -305,17 +288,10 @@ if(chose == 0) {
   wire.entry_in_l1_pf_region_set  := io.entry_stride_neg ^ wire.entry_l1sm_diff_sub_dist_strideh(PA_WIDTH-1)
 }
 
-class gated_clk_cell_IO extends Bundle{
-  val clk_in = Input(Clock())
-  val global_en = Input(Bool())
-  val module_en = Input(Bool())
-  val local_en = Input(Bool())
-  val external_en = Input(Bool())
-  val pad_yy_icg_scan_en = Input(Bool())
-  val clk_out = Output(Clock())
-}
+
 class gated_clk_cell extends BlackBox {
   val io = IO(new gated_clk_cell_IO)
+
 //  override def desiredName: String = s"gated_clk_cell_tmp"
 //  private val clk_en_bf_latch = Wire(UInt(1.W))
 //  private val SE = Wire(UInt(1.W))
