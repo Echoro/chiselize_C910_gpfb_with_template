@@ -79,6 +79,7 @@ module ct_lsu_pfu_pfb_tsm_tmp(
   wire [1:0] wire_entry_mmu_pe_req_set_src = {io_entry_l2_mmu_pe_req_set,io_entry_l1_mmu_pe_req_set}; // @[tsm.scala 152:64]
   wire [1:0] _entry_mmu_pe_req_src_T = entry_mmu_pe_req_src | wire_entry_mmu_pe_req_set_src; // @[tsm.scala 128:52]
   wire  _GEN_15 = wire_entry_mmu_pe_req_set | entry_mmu_pe_req; // @[tsm.scala 126:49 127:24 121:35]
+  
   gated_clk_cell gated_clk_cell ( // @[tsm.scala 28:29]
     .clk_in(gated_clk_cell_clk_in),
     .global_en(gated_clk_cell_global_en),
