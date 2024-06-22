@@ -147,10 +147,11 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
     val state = RegInit(reg.entry_l1_state,args.L1_INIT_PF_ADDR)
   //其实state的寄存器声明可以合并
 
+    //state := args.L1_INIT_PF_ADDR.asUInt  //switch不支持default，可以先赋值，作为一种default，但是这里不可以这样写
   when(io.entry_pop_vld || io.entry_reinit_vld || !io.pfu_dcache_pref_en) {
     state := args.L1_INIT_PF_ADDR.asUInt
   }.otherwise{
-    //state := args.L1_INIT_PF_ADDR.asUInt  //switch不支持default，可以先赋值，作为一种default，但是这里不可以这样写
+
     switch(state){
       is(args.L1_INIT_PF_ADDR){
 
