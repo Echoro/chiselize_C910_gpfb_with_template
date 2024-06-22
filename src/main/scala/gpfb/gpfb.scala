@@ -16,7 +16,7 @@ class tsm extends BlackBox {
 class gpfb (PA_WIDTH:Int)extends RawModule{
 
   val io = IO(new gpfbIO)
-  val wire = Wire(new gpfbwire)
+  val wire = Wire(new gpfbwire(PA_WIDTH))
   val reg = new gpfbreg
 
   override def desiredName: String = s"ct_lsu_pfu_gpfb_t"
@@ -78,7 +78,7 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
       ||  pfu_gpfb_inst_new_va_too_far_l1_pf_va.asBool
       ||  pfu_gpfb_l1_pf_va_too_far_l2_pf_va.asBool
       ||  io.pfu_gsdb_gpfb_pop_req))
-    wire.pfu_gpfb_strideh := "b0".U((wire.pfu_gpfb_strideh.getWidth-PA_WIDTH).W)  ## Fill(PA_WIDTH-11,wire.pfu_gpfb_stride_neg) ## wire.pfu_gpfb_stride(10,7) ## wire_pfu_gpfb_stideh_6to0(6,0)
+    wire.pfu_gpfb_strideh := Fill(PA_WIDTH-11,wire.pfu_gpfb_stride_neg) ## wire.pfu_gpfb_stride(10,7) ## wire_pfu_gpfb_stideh_6to0(6,0)
   }
 
   //                Generate pf_inst_vld signal
@@ -205,28 +205,28 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
   //------------------generate strideh------------------------
 
 
-  wire.pfu_gpfb_l1_dist_strideh := (Fill(wire.pfu_gpfb_l1_dist_strideh.getWidth-PA_WIDTH,"b0".U(1.W)) ##
+  wire.pfu_gpfb_l1_dist_strideh := (
     (Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(3)) & (wire.pfu_gpfb_strideh(PA_WIDTH-5,0) ## "b0".U(4.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(2)) & (wire.pfu_gpfb_strideh(PA_WIDTH-4,0) ## "b0".U(3.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(1)) & (wire.pfu_gpfb_strideh(PA_WIDTH-3,0) ## "b0".U(2.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(0)) & (wire.pfu_gpfb_strideh(PA_WIDTH-2,0) ## "b0".U(1.W))))
 
-  wire.pfu_gpfb_l2_dist_strideh := (Fill(wire.pfu_gpfb_l1_dist_strideh.getWidth-PA_WIDTH,"b0".U(1.W)) ##
+  wire.pfu_gpfb_l2_dist_strideh := (
     (Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(3)) & (wire.pfu_gpfb_strideh(PA_WIDTH-7,0) ## "b0".U(6.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(2)) & (wire.pfu_gpfb_strideh(PA_WIDTH-6,0) ## "b0".U(5.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(1)) & (wire.pfu_gpfb_strideh(PA_WIDTH-5,0) ## "b0".U(4.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(0)) & (wire.pfu_gpfb_strideh(PA_WIDTH-4,0) ## "b0".U(3.W))))
   
-  wire.pfb_gpfb_32strideh    := Fill(wire.pfb_gpfb_32strideh.getWidth-PA_WIDTH,"b0".U(1.W)) ## wire.pfu_gpfb_strideh(PA_WIDTH-6,0) ## "b0".U(5.W)
-  wire.pfb_gpfb_128strideh   := Fill(wire.pfb_gpfb_128strideh.getWidth-PA_WIDTH,"b0".U(1.W)) ## wire.pfu_gpfb_strideh(PA_WIDTH-8,0) ## "b0".U(7.W)
+  wire.pfb_gpfb_32strideh    := wire.pfu_gpfb_strideh(PA_WIDTH-6,0) ## "b0".U(5.W)
+  wire.pfb_gpfb_128strideh   := wire.pfu_gpfb_strideh(PA_WIDTH-8,0) ## "b0".U(7.W)
 
 //-----------------generate l1 too far----------------------
-wire.pfu_gpfb_l1sm_diff_sub_32strideh := Fill(wire.pfu_gpfb_l1sm_diff_sub_32strideh.getWidth-PA_WIDTH,"b0".U(1.W)) ## wire.pfu_gpfb_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - wire.pfb_gpfb_32strideh(PA_WIDTH-1,0)
+wire.pfu_gpfb_l1sm_diff_sub_32strideh :=  wire.pfu_gpfb_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - wire.pfb_gpfb_32strideh(PA_WIDTH-1,0)
 
 wire.pfu_gpfb_inst_new_va_too_far_l1_pf_va_set  := wire.pfu_gpfb_stride_neg ===  wire.pfu_gpfb_l1sm_diff_sub_32strideh(PA_WIDTH-1)
 
 //-----------------generate l2 too far----------------------
-wire.pfu_gpfb_l2sm_diff_sub_128strideh := Fill(wire.pfu_gpfb_l2sm_diff_sub_128strideh.getWidth-PA_WIDTH,"b0".U(1.W)) ## wire.pfu_gpfb_l2_pf_va_sub_l1_pf_va(PA_WIDTH-1,0) - wire.pfb_gpfb_128strideh(PA_WIDTH-1,0)
+wire.pfu_gpfb_l2sm_diff_sub_128strideh := wire.pfu_gpfb_l2_pf_va_sub_l1_pf_va(PA_WIDTH-1,0) - wire.pfb_gpfb_128strideh(PA_WIDTH-1,0)
 
 wire.pfu_gpfb_l1_pf_va_too_far_l2_pf_va_set := wire.pfu_gpfb_stride_neg ===  wire.pfu_gpfb_l2sm_diff_sub_128strideh(PA_WIDTH-1)
 

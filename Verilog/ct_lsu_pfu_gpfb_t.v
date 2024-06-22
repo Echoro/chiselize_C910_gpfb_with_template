@@ -186,7 +186,7 @@ module ct_lsu_pfu_pfb_tsm_tmp(
       entry_mmu_pe_req_src <= _entry_mmu_pe_req_src_T;
     end
   end
-// Register and memory initialization
+
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -493,7 +493,7 @@ module ct_lsu_pfu_pfb_l1sm_tmp(
       entry_inst_new_va_surpass_l1_pf_va <= wire_entry_inst_new_va_surpass_l1_pf_va_set;
     end
   end
-// Register and memory initialization
+
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -783,7 +783,7 @@ module ct_lsu_pfu_pfb_l2sm_tmp(
       entry_inst_new_va_surpass_l1_pf_va <= wire_entry_inst_new_va_surpass_l1_pf_va_set;
     end
   end
-// Register and memory initialization
+
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -1343,7 +1343,7 @@ module ct_lsu_pfu_gpfb_t(
       pfu_gpfb_l1_pf_va_too_far_l2_pf_va <= wire_pfu_gpfb_l1_pf_va_too_far_l2_pf_va_set;
     end
   end
-// Register and memory initialization
+
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif

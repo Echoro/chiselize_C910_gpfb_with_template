@@ -11,7 +11,7 @@ class tsm (PA_WIDTH : Int)extends RawModule {
   override def desiredName: String = "ct_lsu_pfu_pfb_tsm_tmp"
 
   val io = noPrefix{IO(new tsmIO)}
-  val wire = Wire(new tsmwire)
+  val wire = Wire(new tsmwire(PA_WIDTH))
   val reg = new tsmreg
 
   object args extends ChiselEnum {
@@ -78,7 +78,7 @@ class tsm (PA_WIDTH : Int)extends RawModule {
     val entry_inst_new_va = RegInit(reg.entry_inst_new_va,"b0".U(reg.entry_inst_new_va.getWidth.W))
     val entry_priv_mode = RegInit(reg.entry_priv_mode,"b0".U(2.W))
     when(io.entry_pf_inst_vld){
-      entry_inst_new_va := Fill(entry_inst_new_va.getWidth-PA_WIDTH,"b0".U(1.W)) ## wire.entry_pipe_va_add_stride(PA_WIDTH-1,0)
+      entry_inst_new_va :=  wire.entry_pipe_va_add_stride(PA_WIDTH-1,0)
       entry_priv_mode := io.cp0_yy_priv_mode(1,0)
     }
     io.entry_inst_new_va := entry_inst_new_va
@@ -129,10 +129,10 @@ class tsm (PA_WIDTH : Int)extends RawModule {
     io.entry_mmu_pe_req_src := entry_mmu_pe_req_src
   }
 
-  wire.entry_stride_ext :=  ("b0".U((wire.entry_stride_ext.getWidth-PA_WIDTH).W) ## Fill(PA_WIDTH-11,io.entry_stride_neg)) ## io.entry_stride(10,0)
+  wire.entry_stride_ext :=  Fill(PA_WIDTH-11,io.entry_stride_neg) ## io.entry_stride(10,0)
 
 
-  wire.entry_pipe_va_add_stride  := ("b0".U((wire.entry_pipe_va_add_stride.getWidth-PA_WIDTH).W) ## io.pipe_va(PA_WIDTH-1,0)) + wire.entry_stride_ext(PA_WIDTH-1,0)
+  wire.entry_pipe_va_add_stride  := io.pipe_va(PA_WIDTH-1,0) + wire.entry_stride_ext(PA_WIDTH-1,0)
   //judge whether pipe_va + stride cross 4k
   wire.entry_sum_4k :=  io.pipe_va(11,0) + wire.entry_stride_ext(12,0)
 

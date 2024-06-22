@@ -55,9 +55,9 @@ class gpfbIO extends Bundle{
 
 
 }
-class gpfbwire extends Bundle{
-  val pfb_gpfb_128strideh = UInt(40.W)
-  val pfb_gpfb_32strideh = UInt(40.W)
+class gpfbwire(PA_WIDTH:Int) extends Bundle{
+  val pfb_gpfb_128strideh = UInt(PA_WIDTH.W)
+  val pfb_gpfb_32strideh = UInt(PA_WIDTH.W)
   val pfu_gpfb_act_vld = Bool()
   val pfu_gpfb_clk = Clock()
   val pfu_gpfb_clk_en = Bool()
@@ -71,20 +71,20 @@ class gpfbwire extends Bundle{
   val pfu_gpfb_inst_new_va_too_far_l1_pf_va_set = Bool()
   val pfu_gpfb_l1_biu_pe_req_set = Bool()
   val pfu_gpfb_l1_cmp_va_vld = Bool()
-  val pfu_gpfb_l1_dist_strideh = UInt(40.W)
+  val pfu_gpfb_l1_dist_strideh = UInt(PA_WIDTH.W)
   val pfu_gpfb_l1_mmu_pe_req_set = Bool()
   val pfu_gpfb_l1_pf_va = UInt(40.W)
   val pfu_gpfb_l1_pf_va_sub_inst_new_va = UInt(40.W)
   val pfu_gpfb_l1_pf_va_too_far_l2_pf_va_set = Bool()
-  val pfu_gpfb_l1sm_diff_sub_32strideh = UInt(40.W)
+  val pfu_gpfb_l1sm_diff_sub_32strideh = UInt(PA_WIDTH.W)
   val pfu_gpfb_l1sm_reinit_req = Bool()
   val pfu_gpfb_l1sm_va_can_cmp = Bool()
   val pfu_gpfb_l2_biu_pe_req_set = Bool()
   val pfu_gpfb_l2_cmp_va_vld = Bool()
-  val pfu_gpfb_l2_dist_strideh = UInt(40.W)
+  val pfu_gpfb_l2_dist_strideh = UInt(PA_WIDTH.W)
   val pfu_gpfb_l2_mmu_pe_req_set = Bool()
   val pfu_gpfb_l2_pf_va_sub_l1_pf_va = UInt(40.W)
-  val pfu_gpfb_l2sm_diff_sub_128strideh = UInt(40.W)
+  val pfu_gpfb_l2sm_diff_sub_128strideh = UInt(PA_WIDTH.W)
   val pfu_gpfb_l2sm_reinit_req = Bool()
   val pfu_gpfb_l2sm_va_can_cmp = Bool()
   val pfu_gpfb_pf_inst_vld = Bool()
@@ -92,7 +92,7 @@ class gpfbwire extends Bundle{
   val pfu_gpfb_reinit_vld = Bool()
   val pfu_gpfb_stride = UInt(11.W)
   val pfu_gpfb_stride_neg = Bool()
-  val pfu_gpfb_strideh = UInt(40.W)
+  val pfu_gpfb_strideh = UInt(PA_WIDTH.W)
   val pfu_gpfb_tsm_is_judge = Bool()
 }
 class gpfbreg extends Bundle{
@@ -138,7 +138,7 @@ class tsmIO extends Bundle{
   val entry_tsm_is_judge = Output(Bool())
   val entry_vld = Output(Bool())
 }
-class tsmwire extends Bundle{
+class tsmwire(PA_WIDTH:Int) extends Bundle{
   val entry_biu_pe_req_set = UInt(1.W)
   val entry_biu_pe_req_set_src = UInt(2.W)
   val entry_inst_new_va_cross_4k = Bool()
@@ -146,8 +146,8 @@ class tsmwire extends Bundle{
   val entry_mmu_pe_req_set_src = UInt(2.W)
   val entry_pf_inst_vld_clk = Clock()
   val entry_pf_inst_vld_clk_en = Bool()
-  val entry_pipe_va_add_stride = UInt(40.W)
-  val entry_stride_ext = UInt(40.W)
+  val entry_pipe_va_add_stride = UInt(PA_WIDTH.W)
+  val entry_stride_ext = UInt(PA_WIDTH.W)
   val entry_sum_4k = UInt(13.W)
 }
 class tsmreg extends Bundle{
@@ -165,7 +165,7 @@ class tsmreg extends Bundle{
 
 //l1sm
 
-class l1smIO(private val chose:Int) extends Bundle {
+class l1smIO(private val chose:Int,PA_WIDTH:Int) extends Bundle {
   val cp0_lsu_icg_en = Input(UInt(1.W))
   val cp0_lsu_pfu_mmu_dis = Input(UInt(1.W))
   val cp0_yy_clk_en = Input(Bool())
@@ -204,9 +204,9 @@ class l1smIO(private val chose:Int) extends Bundle {
   val entry_l1_mmu_pe_req_set = Output(UInt(1.W))
   val entry_l1_page_sec = Output(UInt(1.W))
   val entry_l1_page_share = Output(UInt(1.W))
-  val entry_l1_pf_addr = Output(UInt(40.W))
-  val entry_l1_pf_va_sub_inst_new_va = Output(UInt(40.W))
-  val entry_l1_vpn = Output(UInt(28.W))
+  val entry_l1_pf_addr = Output(UInt(PA_WIDTH.W))
+  val entry_l1_pf_va_sub_inst_new_va = Output(UInt(PA_WIDTH.W))
+  val entry_l1_vpn = Output(UInt((PA_WIDTH-12).W))
   val entry_l1sm_reinit_req = Output(UInt(1.W))
   val entry_l1sm_va_can_cmp = Output(Bool())
 
@@ -215,7 +215,7 @@ class l1smIO(private val chose:Int) extends Bundle {
 
 }
 
-class l1smwire (private val chose:Int) extends Bundle{
+class l1smwire (private val chose:Int,PA_WIDTH:Int) extends Bundle{
   val entry_in_l1_pf_region_set		 = 	UInt(1.W)
   val entry_inst_new_va_surpass_l1_pf_va_set		 = 	UInt(1.W)
   val entry_l1_biu_pe_req		 = 	UInt(1.W)
@@ -227,26 +227,26 @@ class l1smwire (private val chose:Int) extends Bundle{
   val entry_l1_pf_ppn_clk_en		 = 	Bool()
   val entry_l1_pf_ppn_up_vld		 = 	Bool()
   val entry_l1_pf_va_add_gateclk_en		 = 	Bool()
-  val entry_l1_pf_va_add_strideh		 = 	UInt(40.W)
+  val entry_l1_pf_va_add_strideh		 = 	UInt(PA_WIDTH.W)
   val entry_l1_pf_va_add_vld		 = Bool()
   val entry_l1_pf_va_clk		 = 	Clock()
   val entry_l1_pf_va_clk_en		 = 	Bool()
   val entry_l1_pf_va_cross_4k		 = 	UInt(1.W)
   val entry_l1_pf_va_eq_inst_new_va		 = Bool()
   val entry_l1_pf_va_sum_4k		 = 	UInt(13.W)
-  val entry_l1sm_diff_sub_dist_strideh		 = 	UInt(40.W)
+  val entry_l1sm_diff_sub_dist_strideh		 = 	UInt(PA_WIDTH.W)
 
   val entry_l1_pf_va =if(chose == 1) Some(UInt(40.W)) else None
 
 }
-class l1smreg extends Bundle{
+class l1smreg(PA_WIDTH:Int) extends Bundle{
   val entry_in_l1_pf_region = UInt(1.W);
   val entry_inst_new_va_surpass_l1_pf_va = UInt(1.W);
   val entry_l1_cmp_va_vld = UInt(1.W);
   val entry_l1_page_sec = UInt(1.W);
   val entry_l1_page_share = UInt(1.W);
-  val entry_l1_pf_ppn = UInt(28.W);
-  val entry_l1_pf_va = UInt(40.W);
+  val entry_l1_pf_ppn = UInt((PA_WIDTH-12).W);
+  val entry_l1_pf_va = UInt(PA_WIDTH.W);
   val entry_l1_state = UInt(3.W);
 }
 
