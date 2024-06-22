@@ -55,7 +55,7 @@ class gpfbIO extends Bundle{
 
 
 }
-class gpfbwire extends Bundle{
+class gpfbwire(PA_WIDTH:Int) extends Bundle{
   val pfb_gpfb_128strideh = UInt(40.W)
   val pfb_gpfb_32strideh = UInt(40.W)
   val pfu_gpfb_act_vld = Bool()
@@ -92,7 +92,7 @@ class gpfbwire extends Bundle{
   val pfu_gpfb_reinit_vld = Bool()
   val pfu_gpfb_stride = UInt(11.W)
   val pfu_gpfb_stride_neg = Bool()
-  val pfu_gpfb_strideh = UInt(40.W)
+  val pfu_gpfb_strideh = UInt(PA_WIDTH.W)
   val pfu_gpfb_tsm_is_judge = Bool()
 }
 class gpfbreg extends Bundle{

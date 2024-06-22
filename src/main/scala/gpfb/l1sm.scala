@@ -63,18 +63,18 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
   withClockAndReset(wire.entry_l1_pf_va_clk,(!io.cpurst_b.asBool).asAsyncReset) {
     val entry_l1_pf_va = Reg(reg.entry_l1_pf_va)
     when(!io.cpurst_b.asBool) {
-      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth - 1, PA_WIDTH) ## Fill(PA_WIDTH, "b0".U(1.W))
+      entry_l1_pf_va :=  Fill(PA_WIDTH, "b0".U(1.W))
     }.elsewhen(wire.entry_l1_pf_addr_init_vld) {
-      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth - 1, PA_WIDTH) ## io.entry_inst_new_va(PA_WIDTH - 1, 0)
+      entry_l1_pf_va :=  io.entry_inst_new_va(PA_WIDTH - 1, 0)
     }.elsewhen(wire.entry_l1_pf_va_add_vld) {
-      entry_l1_pf_va := entry_l1_pf_va(entry_l1_pf_va.getWidth - 1, PA_WIDTH) ## wire.entry_l1_pf_va_add_strideh(PA_WIDTH - 1, 0)
+      entry_l1_pf_va :=  wire.entry_l1_pf_va_add_strideh(PA_WIDTH - 1, 0)
     }
     if (chose == 0) {
       io.entry_l1_pf_va.get := entry_l1_pf_va
     }else{
       wire.entry_l1_pf_va.get := entry_l1_pf_va
     }
-    io.entry_l1_vpn := Fill((io.entry_l1_vpn.getWidth - 1) - (PA_WIDTH - 12), "b0".U(1.W)) ## entry_l1_pf_va(PA_WIDTH - 1, 12)
+    io.entry_l1_vpn :=  entry_l1_pf_va(PA_WIDTH - 1, 12)
 
     //注意：原来的verilog是高位悬空的，我这里处理为高位置0
   }
@@ -86,27 +86,27 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
     val entry_l1_page_share = Reg(reg.entry_l1_page_share)
 
     when(!io.cpurst_b.asBool){
-      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth-1,PA_WIDTH-12) ## Fill(PA_WIDTH-12,"b0".U(1.W))
+      entry_l1_pf_ppn                :=  Fill(PA_WIDTH-12,"b0".U(1.W))
       entry_l1_page_sec              := "b0".U(1.W)
       entry_l1_page_share            := "b0".U(1.W)
     }.elsewhen(wire.entry_l1_pf_addr_init_vld &&  io.pfu_dcache_pref_en){
 
-      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth-1,PA_WIDTH-12) ## io.ld_da_ppn_ff(PA_WIDTH-13,0)
+      entry_l1_pf_ppn                := io.ld_da_ppn_ff(PA_WIDTH-13,0)
       entry_l1_page_sec              := io.ld_da_page_sec_ff
       entry_l1_page_share            := io.ld_da_page_share_ff
 
     }.elsewhen(wire.entry_l1_pf_ppn_up_vld){
 
-      entry_l1_pf_ppn                := entry_l1_pf_ppn(entry_l1_pf_ppn.getWidth-1,PA_WIDTH-12) ## io.pfu_get_ppn(PA_WIDTH-13,0)
+      entry_l1_pf_ppn                := io.pfu_get_ppn(PA_WIDTH-13,0)
       entry_l1_page_sec              := io.pfu_get_page_sec
       entry_l1_page_share            := io.pfu_get_page_share
     }
 
     //wire
     if(chose == 0){
-      io.entry_l1_pf_addr  := Fill((io.entry_l1_pf_addr.getWidth-PA_WIDTH),"b0".U(1.W)) ## entry_l1_pf_ppn(PA_WIDTH-13,0) ## io.entry_l1_pf_va.get(11,0);
+      io.entry_l1_pf_addr  := entry_l1_pf_ppn(PA_WIDTH-13,0) ## io.entry_l1_pf_va.get(11,0);
     }else{
-      io.entry_l1_pf_addr  := Fill((io.entry_l1_pf_addr.getWidth-PA_WIDTH),"b0".U(1.W)) ## entry_l1_pf_ppn(PA_WIDTH-13,0) ## wire.entry_l1_pf_va.get(11,0);
+      io.entry_l1_pf_addr  := entry_l1_pf_ppn(PA_WIDTH-13,0) ## wire.entry_l1_pf_va.get(11,0);
     }
     //output
     io.entry_l1_page_sec := entry_l1_page_sec
@@ -232,10 +232,10 @@ class l1sm (PA_WIDTH:Int,chose:Int) extends RawModule {
   wire.entry_l1_pf_va_add_vld   := (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) || wire.entry_l1_biu_pe_req_grnt
   wire.entry_l1_pf_va_add_gateclk_en  :=  (entry_l1_state.asUInt === args.L1_ADD_PF_VA.asUInt) ||  io.entry_biu_pe_req_grnt
   if(chose == 0){
-    wire.entry_l1_pf_va_add_strideh := Fill((wire.entry_l1_pf_va_add_strideh.getWidth-PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va.get(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
+    wire.entry_l1_pf_va_add_strideh :=  (io.entry_l1_pf_va.get(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
     wire.entry_l1_pf_va_sum_4k  := Cat("b0".U(1.W),io.entry_l1_pf_va.get(11,0)) + io.entry_strideh(12,0)
   }else{
-    wire.entry_l1_pf_va_add_strideh := Fill((wire.entry_l1_pf_va_add_strideh.getWidth-PA_WIDTH),"b0".U(1.W)) ## (wire.entry_l1_pf_va.get(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
+    wire.entry_l1_pf_va_add_strideh :=  (wire.entry_l1_pf_va.get(PA_WIDTH-1,0) + io.entry_strideh(PA_WIDTH-1,0))
     wire.entry_l1_pf_va_sum_4k  := Cat("b0".U(1.W),wire.entry_l1_pf_va.get(11,0)) + io.entry_strideh(12,0)
   }
   //原来的verilog对entry_l1_pf_va_sum_4K是[12:0]但是1.chisel不支持位选变化2.声明的时候就是[12:0]，不需要再位选了
@@ -276,12 +276,12 @@ if(chose == 0) {
   //==========================================================
   // &Force("output","entry_l1_pf_va_sub_inst_new_va"); @272
   if(chose == 0){
-    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va.get(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
+    io.entry_l1_pf_va_sub_inst_new_va  :=  (io.entry_l1_pf_va.get(PA_WIDTH-1,0) - io.entry_inst_new_va(PA_WIDTH-1,0))
   }else {
-    io.entry_l1_pf_va_sub_inst_new_va  := Fill((io.entry_l1_pf_va_sub_inst_new_va.getWidth-PA_WIDTH),"b0".U(1.W)) ## (wire.entry_l1_pf_va.get(PA_WIDTH-1,0) - io.entry_l1_pf_va_t.get(PA_WIDTH-1,0))
+    io.entry_l1_pf_va_sub_inst_new_va  :=  (wire.entry_l1_pf_va.get(PA_WIDTH-1,0) - io.entry_l1_pf_va_t.get(PA_WIDTH-1,0))
   }
 
-    wire.entry_l1sm_diff_sub_dist_strideh := Fill((wire.entry_l1sm_diff_sub_dist_strideh.getWidth-PA_WIDTH),"b0".U(1.W)) ## (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
+    wire.entry_l1sm_diff_sub_dist_strideh :=  (io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0) - io.entry_l1_dist_strideh(PA_WIDTH-1,0))
 
 
     wire.entry_l1_pf_va_eq_inst_new_va := !io.entry_l1_pf_va_sub_inst_new_va(PA_WIDTH-1,0).orR //注意这里容易错，！对于UInt来说，是检测UInt是否为0，如果为0则返回1
