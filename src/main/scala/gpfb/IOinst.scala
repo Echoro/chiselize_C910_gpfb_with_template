@@ -210,12 +210,8 @@ class l1smIO(private val chose:Int) extends Bundle {
   val entry_l1sm_reinit_req = Output(UInt(1.W))
   val entry_l1sm_va_can_cmp = Output(Bool())
 
-  //val entry_l1_pf_va = if(chose == 0) Output(UInt(40.W)) else Output(UInt(0.W))
-  //val entry_l1_pf_va_t =if(chose == 1) Input(UInt(40.W)) else Input(UInt(0.W))
-
   val entry_l1_pf_va = if(chose == 0) Some(Output(UInt(40.W))) else None
   val entry_l1_pf_va_t =if(chose == 1) Some(Input(UInt(40.W))) else None
-  //override def cloneType = (new l1smIO(chose)).asInstanceOf[this.type]
 
 }
 
@@ -240,9 +236,8 @@ class l1smwire (private val chose:Int) extends Bundle{
   val entry_l1_pf_va_sum_4k		 = 	UInt(13.W)
   val entry_l1sm_diff_sub_dist_strideh		 = 	UInt(40.W)
 
-  //val entry_l1_pf_va = if(chose == 1) UInt(40.W) else UInt(0.W)
   val entry_l1_pf_va =if(chose == 1) Some(UInt(40.W)) else None
-  //override def cloneType = (new l1smwire(chose)).asInstanceOf[this.type]
+
 }
 class l1smreg extends Bundle{
   val entry_in_l1_pf_region = UInt(1.W);

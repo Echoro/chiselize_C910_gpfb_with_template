@@ -1,11 +1,9 @@
 package gpfbTOP
 import IOinst._
 
-import chisel3.{util, _}
+import chisel3._
 import chisel3.experimental.{ChiselEnum, noPrefix}
 import chisel3.util.{Fill, is, switch}
-import os.FileType.File
-
 
 
 class tsm (PA_WIDTH : Int)extends RawModule {

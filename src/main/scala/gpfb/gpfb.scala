@@ -157,7 +157,6 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
     lsm(i).pfu_get_ppn_err := io.pfu_get_ppn_err
     lsm(i).pfu_get_ppn_vld := io.pfu_get_ppn_vld
     lsm(i).pfu_mmu_pe_req_sel_l1 := io.pfu_mmu_pe_req_sel_l1
-
     lsm(i).entry_inst_new_va := wire.pfu_gpfb_inst_new_va
 
     if(i == 0){
