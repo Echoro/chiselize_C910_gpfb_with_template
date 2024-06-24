@@ -1,4 +1,4 @@
-package gpfbTOP
+package gpfb
 import IOinst._
 
 import chisel3._
@@ -205,17 +205,15 @@ class gpfb (PA_WIDTH:Int)extends RawModule{
   //------------------generate strideh------------------------
 
 
-  wire.pfu_gpfb_l1_dist_strideh := (
-    (Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(3)) & (wire.pfu_gpfb_strideh(PA_WIDTH-5,0) ## "b0".U(4.W))
+  wire.pfu_gpfb_l1_dist_strideh := (Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(3)) & (wire.pfu_gpfb_strideh(PA_WIDTH-5,0) ## "b0".U(4.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(2)) & (wire.pfu_gpfb_strideh(PA_WIDTH-4,0) ## "b0".U(3.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(1)) & (wire.pfu_gpfb_strideh(PA_WIDTH-3,0) ## "b0".U(2.W))
-    | Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(0)) & (wire.pfu_gpfb_strideh(PA_WIDTH-2,0) ## "b0".U(1.W))))
+    | Fill(PA_WIDTH,io.lsu_pfu_l1_dist_sel(0)) & (wire.pfu_gpfb_strideh(PA_WIDTH-2,0) ## "b0".U(1.W)))
 
-  wire.pfu_gpfb_l2_dist_strideh := (
-    (Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(3)) & (wire.pfu_gpfb_strideh(PA_WIDTH-7,0) ## "b0".U(6.W))
+  wire.pfu_gpfb_l2_dist_strideh := (Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(3)) & (wire.pfu_gpfb_strideh(PA_WIDTH-7,0) ## "b0".U(6.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(2)) & (wire.pfu_gpfb_strideh(PA_WIDTH-6,0) ## "b0".U(5.W))
     | Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(1)) & (wire.pfu_gpfb_strideh(PA_WIDTH-5,0) ## "b0".U(4.W))
-    | Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(0)) & (wire.pfu_gpfb_strideh(PA_WIDTH-4,0) ## "b0".U(3.W))))
+    | Fill(PA_WIDTH,io.lsu_pfu_l2_dist_sel(0)) & (wire.pfu_gpfb_strideh(PA_WIDTH-4,0) ## "b0".U(3.W)))
   
   wire.pfb_gpfb_32strideh    := wire.pfu_gpfb_strideh(PA_WIDTH-6,0) ## "b0".U(5.W)
   wire.pfb_gpfb_128strideh   := wire.pfu_gpfb_strideh(PA_WIDTH-8,0) ## "b0".U(7.W)

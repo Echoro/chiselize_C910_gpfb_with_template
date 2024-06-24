@@ -1,4 +1,4 @@
-package gpfbTOP
+package gpfb
 
 import IOinst._
 import chisel3._
